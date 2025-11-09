@@ -44,6 +44,49 @@ const StatsPage = () => {
       minHeight: '100vh',
       padding: '16px',
     }}>
+      {/* Period and Amount Header */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        marginBottom: '16px',
+      }}>
+        {/* Date */}
+        <Text weight="2" style={{ 
+          color: 'var(--tgui--text_color)',
+          marginBottom: '4px',
+        }}>
+          November 2025
+        </Text>
+        
+        {/* Amount with Currency */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '4px',
+        }}>
+          <span style={{
+            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif',
+            fontSize: '28px',
+            fontWeight: 'bold',
+            letterSpacing: '-0.4px',
+            color: 'var(--tgui--hint_color)',
+            lineHeight: '1',
+          }}>
+            -PLN
+          </span>
+          <span style={{
+            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif',
+            fontSize: '44px',
+            fontWeight: 'bold',
+            letterSpacing: '-0.4px',
+            color: 'var(--tgui--text_color)',
+            lineHeight: '1',
+          }}>
+            2,043.12
+          </span>
+        </div>
+      </div>
+
       {/* 1. Analyze Button */}
       <Button
         mode="bezeled"
