@@ -13,71 +13,69 @@ const SettingsPage = () => {
       backgroundColor: 'var(--tgui--secondary_bg_color)',
       minHeight: '100vh',
     }}>
-      <div className="page-content">
-        {/* User Profile Section */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: '20px',
-          marginBottom: '20px',
-          marginLeft: '44px',
-          marginRight: '44px',
-        }}>
-          <Avatar
-            size={96}
-            acronym="NS"
-          />
-          <Headline 
-            weight="2" 
-            style={{ 
-              marginTop: '16px',
-              color: 'var(--tgui--text_color)',
-            }}
-          >
-            Name Surname
-          </Headline>
-          <Caption 
-            level="1"
-            style={{ 
-              marginTop: '4px',
-              color: 'var(--tgui--hint_color)',
-            }}
-          >
-            Settings
-          </Caption>
-        </div>
+      {/* User Profile Section */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        paddingTop: '40px',
+        paddingBottom: '20px',
+        paddingLeft: '44px',
+        paddingRight: '44px',
+      }}>
+        <Avatar
+          size={96}
+          acronym="NS"
+        />
+        <Headline 
+          weight="2" 
+          style={{ 
+            marginTop: '16px',
+            color: 'var(--tgui--text_color)',
+          }}
+        >
+          Name Surname
+        </Headline>
+        <Caption 
+          level="1"
+          style={{ 
+            marginTop: '4px',
+            color: 'var(--tgui--hint_color)',
+          }}
+        >
+          Settings
+        </Caption>
+      </div>
 
-        {/* Settings List */}
-        <div style={{
-          marginTop: '12px',
-          marginBottom: '12px',
-          marginLeft: '16px',
-          marginRight: '16px',
-        }}>
-          <List>
-            <Cell
-              before={
-                <IconContainer>
-                  <Icon24Notifications />
-                </IconContainer>
-              }
-              after={
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '4px',
-                  color: 'var(--tgui--hint_color)',
-                }}>
-                  <span>PLN</span>
-                  <Icon16Chevron />
-                </div>
-              }
-            >
-              Currency
-            </Cell>
-          </List>
-        </div>
+      {/* Settings List */}
+      <div style={{
+        marginTop: '12px',
+        marginBottom: '12px',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      }}>
+        <List style={{ backgroundColor: 'var(--tgui--bg_color)' }}>
+          <Cell
+            before={
+              <IconContainer>
+                <Icon24Notifications />
+              </IconContainer>
+            }
+            after={
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px',
+                color: 'var(--tgui--hint_color)',
+              }}>
+                <span>PLN</span>
+                <Icon16Chevron />
+              </div>
+            }
+          >
+            Currency
+          </Cell>
+        </List>
       </div>
     </div>
   );
