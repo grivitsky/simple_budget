@@ -108,13 +108,25 @@ const SettingsPage = () => {
               <div key={currency.code}>
                 <Cell
                   onClick={() => setSelectedCurrency(currency.code)}
+                  style={{
+                    paddingTop: '14px',
+                    paddingBottom: '14px',
+                  }}
                   before={
-                    <Text 
-                      weight="3"
-                      style={{ color: 'var(--tgui--text_color)' }}
-                    >
-                      {currency.code} {currency.name}
-                    </Text>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <Text 
+                        weight="3"
+                        style={{ color: 'var(--tgui--hint_color)' }}
+                      >
+                        {currency.code}
+                      </Text>
+                      <Text 
+                        weight="3"
+                        style={{ color: 'var(--tgui--text_color)' }}
+                      >
+                        {currency.name}
+                      </Text>
+                    </div>
                   }
                   after={
                     <Selectable
