@@ -66,9 +66,9 @@ const StatsPage = () => {
           gap: '4px',
         }}>
           <span style={{
-            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif !important',
+            fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: '28px',
-            fontWeight: 'bold',
+            fontWeight: '700',
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
@@ -77,9 +77,9 @@ const StatsPage = () => {
             -PLN
           </span>
           <span style={{
-            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif !important',
+            fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: '44px',
-            fontWeight: 'bold',
+            fontWeight: '700',
             letterSpacing: '-0.4px',
             color: 'var(--tgui--text_color)',
             lineHeight: '1',
