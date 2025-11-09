@@ -10,7 +10,7 @@ const BudgetPage = () => {
     }}>
       <div className="page-content">
         <LargeTitle weight="1" style={{ marginBottom: '20px' }}>
-          Budget
+          Organize
         </LargeTitle>
         <Card style={{ marginBottom: '16px', padding: '16px' }}>
           <Text weight="2" style={{ marginBottom: '8px' }}>Monthly Budget</Text>

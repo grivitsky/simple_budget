@@ -23,7 +23,7 @@ const tabs = [
   {
     id: 'budget' as TabId,
     Icon: Icon28Archive,
-    text: 'Budget',
+    text: 'Organize',
     Component: BudgetPage,
   },
   {
