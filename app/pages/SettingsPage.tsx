@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Avatar } from '../../src/components/Blocks/Avatar/Avatar';
 import { Headline } from '../../src/components/Typography/Headline/Headline';
 import { Caption } from '../../src/components/Typography/Caption/Caption';
@@ -6,8 +7,10 @@ import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { IconContainer } from '../../src/components/Blocks/IconContainer/IconContainer';
 import { Icon24Notifications } from '../../src/icons/24/notifications';
 import { Icon16Chevron } from '../../src/icons/16/chevron';
+import { Modal } from '../../src/components/Overlays/Modal/Modal';
 
 const SettingsPage = () => {
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   return (
     <div style={{ 
       backgroundColor: 'var(--tgui--secondary_bg_color)',
@@ -57,6 +60,7 @@ const SettingsPage = () => {
           padding: '0',
         }}>
           <Cell
+            onClick={() => setIsCurrencyModalOpen(true)}
             before={
               <IconContainer>
                 <Icon24Notifications />
@@ -78,6 +82,17 @@ const SettingsPage = () => {
           </Cell>
         </List>
       </div>
+
+      {/* Currency Modal */}
+      <Modal
+        open={isCurrencyModalOpen}
+        onOpenChange={setIsCurrencyModalOpen}
+        header={<Modal.Header>Default Currency</Modal.Header>}
+      >
+        <div style={{ padding: '20px' }}>
+          {/* Currency selection content will go here */}
+        </div>
+      </Modal>
     </div>
   );
 };
