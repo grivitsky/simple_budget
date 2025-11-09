@@ -119,7 +119,7 @@ const SettingsPage = () => {
         onOpenChange={setIsCurrencyModalOpen}
         header={<Modal.Header>Default Currency</Modal.Header>}
       >
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '16px 16px 32px 16px' }}>
           <div style={{
             backgroundColor: 'var(--tgui--secondary_bg_color)',
             borderRadius: '12px',
@@ -133,7 +133,7 @@ const SettingsPage = () => {
                     paddingBottom: '14px',
                   }}
                   before={
-                    <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '16px' }}>
                       <Text 
                         weight="3"
                         style={{ color: 'var(--tgui--hint_color)' }}
@@ -160,7 +160,11 @@ const SettingsPage = () => {
                   {null}
                 </Cell>
                 {index < currencies.length - 1 && (
-                  <Divider style={{ borderColor: 'var(--tgui--divider)' }} />
+                  <Divider style={{ 
+                    borderColor: 'var(--tgui--divider)',
+                    marginLeft: '16px',
+                    marginRight: '16px',
+                  }} />
                 )}
               </div>
             ))}
