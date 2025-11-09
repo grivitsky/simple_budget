@@ -48,6 +48,7 @@ const StatsPage = () => {
       <div style={{
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         marginBottom: '16px',
       }}>
         {/* Date */}
@@ -65,17 +66,18 @@ const StatsPage = () => {
           gap: '4px',
         }}>
           <span style={{
-            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif',
+            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif !important',
             fontSize: '28px',
             fontWeight: 'bold',
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
+            padding: '0px 0px 0px 4px',
           }}>
             -PLN
           </span>
           <span style={{
-            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif',
+            fontFamily: 'SF Pro Rounded, system-ui, -apple-system, sans-serif !important',
             fontSize: '44px',
             fontWeight: 'bold',
             letterSpacing: '-0.4px',
