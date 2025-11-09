@@ -64,13 +64,13 @@ const SettingsPage = () => {
       <div style={{
         padding: '12px 16px',
       }}>
-        <List style={{ 
-          backgroundColor: 'var(--tgui--bg_color)',
-          borderRadius: '12px',
-          padding: '0',
-        }}>
+        <List style={{ padding: '0' }}>
           <Cell
             onClick={() => setIsCurrencyModalOpen(true)}
+            style={{
+              backgroundColor: 'var(--tgui--bg_color)',
+              borderRadius: '12px',
+            }}
             before={
               <IconContainer>
                 <Icon24Notifications />
