@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '../../src/components/Blocks/Button/Button';
 import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
 import { Section } from '../../src/components/Blocks/Section/Section';
+import { Cell } from '../../src/components/Blocks/Cell/Cell';
+import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
 
 const StatsPage = () => {
@@ -78,7 +80,34 @@ const StatsPage = () => {
           </div>
         }
       >
-        {/* Content will be added later */}
+        <Cell
+          style={{
+            backgroundColor: 'var(--tgui--bg_color)',
+            borderRadius: '16px',
+          }}
+          before={
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#61B5F7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+            }}>
+              🍔
+            </div>
+          }
+          subtitle="1,323.33 PLN"
+          after={
+            <Text weight="1" style={{ color: 'var(--tgui--text_color)' }}>
+              56.2%
+            </Text>
+          }
+        >
+          Eating Out
+        </Cell>
       </Section>
     </div>
   );
