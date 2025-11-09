@@ -5,7 +5,7 @@ import { Caption } from '../../src/components/Typography/Caption/Caption';
 import { List } from '../../src/components/Blocks/List/List';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { IconContainer } from '../../src/components/Blocks/IconContainer/IconContainer';
-import { Icon24Notifications } from '../../src/icons/24/notifications';
+import { Icon32CurrencyColoredSquare } from '../../src/icons/32/currency_colored_square';
 import { Icon16Chevron } from '../../src/icons/16/chevron';
 import { Modal } from '../../src/components/Overlays/Modal/Modal';
 import { Divider } from '../../src/components/Misc/Divider/Divider';
@@ -91,11 +91,11 @@ const SettingsPage = () => {
               backgroundColor: 'var(--tgui--bg_color)',
               borderRadius: '12px',
             }}
-            before={
-              <IconContainer>
-                <Icon24Notifications />
-              </IconContainer>
-            }
+              before={
+                <IconContainer>
+                  <Icon32CurrencyColoredSquare />
+                </IconContainer>
+              }
             after={
               <div style={{ 
                 display: 'flex', 
