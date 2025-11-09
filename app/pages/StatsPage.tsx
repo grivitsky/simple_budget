@@ -101,7 +101,7 @@ const StatsPage = () => {
             style={{
               minWidth: 'auto',
               height: 'auto',
-              padding: 0,
+              padding: "0px 0px 8px 0px",
             }}
           >
             10 Categories
