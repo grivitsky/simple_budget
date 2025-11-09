@@ -48,35 +48,33 @@ const SettingsPage = () => {
       </div>
 
       {/* Settings List */}
-      <div style={{
+      <List style={{ 
+        backgroundColor: 'var(--tgui--bg_color)',
+        borderRadius: '10px',
         marginTop: '12px',
         marginBottom: '12px',
-        paddingLeft: '16px',
-        paddingRight: '16px',
       }}>
-        <List style={{ backgroundColor: 'var(--tgui--bg_color)' }}>
-          <Cell
-            before={
-              <IconContainer>
-                <Icon24Notifications />
-              </IconContainer>
-            }
-            after={
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '4px',
-                color: 'var(--tgui--hint_color)',
-              }}>
-                <span>PLN</span>
-                <Icon16Chevron />
-              </div>
-            }
-          >
-            Currency
-          </Cell>
-        </List>
-      </div>
+        <Cell
+          before={
+            <IconContainer>
+              <Icon24Notifications />
+            </IconContainer>
+          }
+          after={
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '4px',
+              color: 'var(--tgui--hint_color)',
+            }}>
+              <span>PLN</span>
+              <Icon16Chevron />
+            </div>
+          }
+        >
+          Currency
+        </Cell>
+      </List>
     </div>
   );
 };
