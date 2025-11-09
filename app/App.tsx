@@ -49,6 +49,10 @@ function App() {
     if (tg) {
       tg.ready();
       tg.expand();
+      
+      // Set Telegram interface colors to match app background
+      tg.setHeaderColor('secondary_bg_color');
+      tg.setBackgroundColor(tg.themeParams.secondary_bg_color || '#efeff3');
     }
   }, []);
 
