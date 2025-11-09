@@ -136,7 +136,11 @@ const SettingsPage = () => {
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <Text 
                         weight="3"
-                        style={{ color: 'var(--tgui--hint_color)' }}
+                        style={{ 
+                          color: 'var(--tgui--hint_color)',
+                          width: '36px',
+                          flexShrink: 0,
+                        }}
                       >
                         {currency.code}
                       </Text>
