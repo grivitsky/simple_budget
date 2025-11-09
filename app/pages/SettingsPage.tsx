@@ -53,6 +53,7 @@ const SettingsPage = () => {
         borderRadius: '10px',
         marginTop: '12px',
         marginBottom: '12px',
+        padding: '0',
       }}>
         <Cell
           before={
