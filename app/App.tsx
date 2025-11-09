@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { AppRoot } from '../src/components/Service/AppRoot/AppRoot';
 import { Tabbar } from '../src/components/Layout/Tabbar/Tabbar';
-import { Icon28Chat } from '../src/icons/28/chat';
+import { Icon28Addhome } from '../src/icons/28/addhome';
+import { Icon28Archive } from '../src/icons/28/archive';
 import { Icon28Stats } from '../src/icons/28/stats';
-import { Icon28Devices } from '../src/icons/28/devices';
-import { Icon28Heart } from '../src/icons/28/heart';
+import { Icon28BotMenu } from '../src/icons/28/bot_menu';
 
 import HomePage from './pages/HomePage';
 import BudgetPage from './pages/BudgetPage';
@@ -16,13 +16,13 @@ type TabId = 'home' | 'budget' | 'stats' | 'settings';
 const tabs = [
   {
     id: 'home' as TabId,
-    Icon: Icon28Chat,
+    Icon: Icon28Addhome,
     text: 'Home',
     Component: HomePage,
   },
   {
     id: 'budget' as TabId,
-    Icon: Icon28Heart,
+    Icon: Icon28Archive,
     text: 'Budget',
     Component: BudgetPage,
   },
@@ -34,7 +34,7 @@ const tabs = [
   },
   {
     id: 'settings' as TabId,
-    Icon: Icon28Devices,
+    Icon: Icon28BotMenu,
     text: 'Settings',
     Component: SettingsPage,
   },
