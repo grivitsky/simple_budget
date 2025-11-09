@@ -90,9 +90,15 @@ const SettingsPage = () => {
             style={{
               backgroundColor: 'var(--tgui--bg_color)',
               borderRadius: '12px',
+              paddingLeft: '12px',
+              paddingRight: '12px',
             }}
               before={
-                <IconContainer>
+                <IconContainer style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
                   <Icon32CurrencyColoredSquare />
                 </IconContainer>
               }
