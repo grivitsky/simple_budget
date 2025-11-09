@@ -1,0 +1,13 @@
+node_modules
+.git
+.cache
+.idea
+.vscode
+.DS_Store
+*.log
+jest.config.js
+webpack.styles.config.js
+tsconfig.dist.json
+package.swcrc
+.storybook
+
