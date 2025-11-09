@@ -6,6 +6,36 @@ import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
 
+// Category Circle Component
+const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
+  <div style={{
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+  }}>
+    {emoji}
+  </div>
+);
+
+// Test categories data
+const categories = [
+  { emoji: '🍔', name: 'Eating Out', amount: '1,323.33 PLN', percentage: '56.2%', color: '#61B5F7' },
+  { emoji: '🏠', name: 'Housing', amount: '850.00 PLN', percentage: '36.1%', color: '#FF6B6B' },
+  { emoji: '🚗', name: 'Transport', amount: '450.50 PLN', percentage: '19.1%', color: '#4ECDC4' },
+  { emoji: '🛒', name: 'Groceries', amount: '620.75 PLN', percentage: '26.3%', color: '#95E1D3' },
+  { emoji: '💊', name: 'Healthcare', amount: '280.00 PLN', percentage: '11.9%', color: '#F38181' },
+  { emoji: '🎬', name: 'Entertainment', amount: '190.25 PLN', percentage: '8.1%', color: '#AA96DA' },
+  { emoji: '👕', name: 'Shopping', amount: '340.90 PLN', percentage: '14.5%', color: '#FCBAD3' },
+  { emoji: '📱', name: 'Utilities', amount: '215.00 PLN', percentage: '9.1%', color: '#FFFFD2' },
+  { emoji: '✈️', name: 'Travel', amount: '520.00 PLN', percentage: '22.1%', color: '#A8D8EA' },
+  { emoji: '🎓', name: 'Education', amount: '175.50 PLN', percentage: '7.5%', color: '#FFB6B9' },
+];
+
 const StatsPage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
 
@@ -80,34 +110,26 @@ const StatsPage = () => {
           </div>
         }
       >
-        <Cell
-          style={{
-            backgroundColor: 'var(--tgui--bg_color)',
-            borderRadius: '16px',
-          }}
-          before={
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#61B5F7',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '20px',
-            }}>
-              🍔
-            </div>
-          }
-          subtitle="1,323.33 PLN"
-          after={
-            <Text weight="1" style={{ color: 'var(--tgui--text_color)' }}>
-              56.2%
-            </Text>
-          }
-        >
-          Eating Out
-        </Cell>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {categories.map((category, index) => (
+            <Cell
+              key={index}
+              style={{
+                backgroundColor: 'var(--tgui--bg_color)',
+                borderRadius: '16px',
+              }}
+              before={<CategoryCircle emoji={category.emoji} color={category.color} />}
+              subtitle={category.amount}
+              after={
+                <Text weight="1" style={{ color: 'var(--tgui--text_color)' }}>
+                  {category.percentage}
+                </Text>
+              }
+            >
+              {category.name}
+            </Cell>
+          ))}
+        </div>
       </Section>
     </div>
   );
