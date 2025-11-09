@@ -53,7 +53,7 @@ const StatsPage = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '8px 8px 8px 8px',
+            padding: '0px',
           }}>
             <span style={{
               fontSize: '13px',
