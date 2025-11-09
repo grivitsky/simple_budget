@@ -92,6 +92,8 @@ const SettingsPage = () => {
               borderRadius: '12px',
               paddingLeft: '12px',
               paddingRight: '12px',
+              paddingTop: '16px',
+              paddingBottom: '16px',
             }}
               before={
                 <IconContainer style={{
