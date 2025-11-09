@@ -56,7 +56,7 @@ const StatsPage = () => {
       </Button>
 
       {/* 2. Period Tabs */}
-      <TabsList style={{ marginBottom: '20px' }}>
+      <TabsList style={{ marginBottom: '16px' }}>
         <TabsList.Item
           selected={selectedPeriod === 'week'}
           onClick={() => setSelectedPeriod('week')}
