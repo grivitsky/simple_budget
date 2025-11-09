@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../src/components/Blocks/Button/Button';
 import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
-import { Section } from '../../src/components/Blocks/Section/Section';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
@@ -79,37 +78,37 @@ const StatsPage = () => {
       </TabsList>
 
       {/* 3. Category Section with Custom Header */}
-      <Section
-        header={
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0px',
+      <div>
+        {/* Section Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 0px 8px 16px',
+        }}>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 400,
+            textTransform: 'uppercase',
+            color: 'var(--tgui--section_header_text_color)',
+            letterSpacing: '-0.08px',
           }}>
-            <span style={{
-              fontSize: '13px',
-              fontWeight: 400,
-              textTransform: 'uppercase',
-              color: 'var(--tgui--section_header_text_color)',
-              letterSpacing: '-0.08px',
-            }}>
-              By Category
-            </span>
-            <Button
-              mode="plain"
-              size="s"
-              style={{
-                minWidth: 'auto',
-                height: 'auto',
-                padding: 0,
-              }}
-            >
-              10 Categories
-            </Button>
-          </div>
-        }
-      >
+            By Category
+          </span>
+          <Button
+            mode="plain"
+            size="s"
+            style={{
+              minWidth: 'auto',
+              height: 'auto',
+              padding: 0,
+            }}
+          >
+            10 Categories
+          </Button>
+        </div>
+
+        {/* Category List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {categories.map((category, index) => (
             <Cell
@@ -130,7 +129,7 @@ const StatsPage = () => {
             </Cell>
           ))}
         </div>
-      </Section>
+      </div>
     </div>
   );
 };
