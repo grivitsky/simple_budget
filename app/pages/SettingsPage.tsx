@@ -8,9 +8,19 @@ import { IconContainer } from '../../src/components/Blocks/IconContainer/IconCon
 import { Icon24Notifications } from '../../src/icons/24/notifications';
 import { Icon16Chevron } from '../../src/icons/16/chevron';
 import { Modal } from '../../src/components/Overlays/Modal/Modal';
+import { Divider } from '../../src/components/Misc/Divider/Divider';
+import { Selectable } from '../../src/components/Form/Selectable/Selectable';
+import { Text } from '../../src/components/Typography/Text/Text';
+
+const currencies = [
+  { code: 'PLN', name: 'Polish Zloty' },
+  { code: 'EUR', name: 'Euro' },
+  { code: 'CHF', name: 'Swiss Franc' },
+];
 
 const SettingsPage = () => {
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('PLN');
   return (
     <div style={{ 
       backgroundColor: 'var(--tgui--secondary_bg_color)',
@@ -73,7 +83,7 @@ const SettingsPage = () => {
                 gap: '4px',
                 color: 'var(--tgui--hint_color)',
               }}>
-                <span>PLN</span>
+                <span>{selectedCurrency}</span>
                 <Icon16Chevron />
               </div>
             }
@@ -89,8 +99,38 @@ const SettingsPage = () => {
         onOpenChange={setIsCurrencyModalOpen}
         header={<Modal.Header>Default Currency</Modal.Header>}
       >
-        <div style={{ padding: '20px' }}>
-          {/* Currency selection content will go here */}
+        <div style={{ padding: '16px' }}>
+          <div style={{
+            backgroundColor: 'var(--tgui--secondary_bg_color)',
+            borderRadius: '12px',
+          }}>
+            {currencies.map((currency, index) => (
+              <div key={currency.code}>
+                <Cell
+                  onClick={() => setSelectedCurrency(currency.code)}
+                  before={
+                    <Text 
+                      weight="3"
+                      style={{ color: 'var(--tgui--text_color)' }}
+                    >
+                      {currency.code} {currency.name}
+                    </Text>
+                  }
+                  after={
+                    <Selectable
+                      name="currency"
+                      value={currency.code}
+                      checked={selectedCurrency === currency.code}
+                      onChange={(e) => setSelectedCurrency(e.target.value)}
+                    />
+                  }
+                >
+                  {null}
+                </Cell>
+                {index < currencies.length - 1 && <Divider />}
+              </div>
+            ))}
+          </div>
         </div>
       </Modal>
     </div>
