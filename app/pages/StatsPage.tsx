@@ -15,7 +15,7 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '20px',
+    fontSize: '16px',
   }}>
     {emoji}
   </div>
