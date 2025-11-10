@@ -50,6 +50,7 @@ const StatsPage = () => {
         flexDirection: 'column',
         alignItems: 'center',
         marginBottom: '16px',
+        padding: '0px 32px 0px 24px',
       }}>
         {/* Date */}
         <Text weight="2" style={{ 
