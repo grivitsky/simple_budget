@@ -96,7 +96,7 @@ const StatsPage = () => {
         size="l"
         stretched
         before={<Icon24Guard />}
-        style={{ marginBottom: '20px' }}
+        style={{ marginBottom: '24px' }}
       >
         Analyze
       </Button>
@@ -130,7 +130,7 @@ const StatsPage = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 0px 8px 16px',
+          padding: '0px 12px 8px 12px',
         }}>
           <span style={{
             fontSize: '13px',
