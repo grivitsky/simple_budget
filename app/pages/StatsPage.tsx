@@ -171,7 +171,7 @@ const StatsPage = () => {
                 </Text>
               }
             >
-              {category.name}
+              <Text weight="3">{category.name}</Text>
             </Cell>
           ))}
         </div>
