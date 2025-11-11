@@ -136,7 +136,7 @@ const BudgetPage = () => {
             </div>
           }
         >
-          <Text weight="3" style={{ color: '#2E9DF4' }}>
+          <Text weight="2" style={{ color: '#2E9DF4' }}>
             Eating out
           </Text>
         </Cell>
