@@ -74,16 +74,18 @@ const BudgetPage = () => {
           alignItems: 'flex-end',
           gap: '4px',
         }}>
-          <span style={{
-            fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
-            fontSize: '28px',
-            fontWeight: '700',
-            letterSpacing: '-0.4px',
-            color: 'var(--tgui--hint_color)',
-            lineHeight: '1',
-          }}>
-            -PLN
-          </span>
+          <div style={{ paddingBottom: '4px' }}>
+            <span style={{
+              fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
+              fontSize: '28px',
+              fontWeight: '700',
+              letterSpacing: '-0.4px',
+              color: 'var(--tgui--hint_color)',
+              lineHeight: '1',
+            }}>
+              -PLN
+            </span>
+          </div>
           <span style={{
             fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: '44px',
