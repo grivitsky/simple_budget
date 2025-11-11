@@ -116,7 +116,9 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
               border: 'none',
               outline: 'none',
               backgroundColor: 'transparent',
-              width: '200px',
+              width: 'auto',
+              minWidth: '100px',
+              maxWidth: '300px',
               padding: '0',
             }}
           />
