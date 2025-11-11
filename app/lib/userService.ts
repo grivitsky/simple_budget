@@ -44,7 +44,7 @@ export async function getOrCreateUser(telegramUser: any): Promise<User | null> {
       language_code: telegramUser.language_code || null,
       photo_url: telegramUser.photo_url || null,
       ai_features_enabled: false, // Default: AI features off
-      default_currency: 'PLN', // Default currency
+      default_currency: 'USD', // Default currency
     };
 
     console.log('📝 User data to insert:', newUser);

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   language_code TEXT,
   photo_url TEXT,
   ai_features_enabled BOOLEAN DEFAULT FALSE NOT NULL,
-  default_currency TEXT DEFAULT 'PLN' NOT NULL,
+  default_currency TEXT DEFAULT 'USD' NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );

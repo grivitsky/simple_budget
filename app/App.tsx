@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { AppRoot } from '../src/components/Service/AppRoot/AppRoot';
 import { Tabbar } from '../src/components/Layout/Tabbar/Tabbar';
 import { Icon28Addhome } from '../src/icons/28/addhome';
@@ -78,11 +78,6 @@ function App() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
-  const [authDebug, setAuthDebug] = useState<string[]>([]);
-
-  const addDebug = useCallback((message: string) => {
-    setAuthDebug(prev => [...prev, `${new Date().toLocaleTimeString()} — ${message}`]);
-  }, []);
 
   useEffect(() => {
     // Initialize Telegram Web App and authenticate user
@@ -91,14 +86,7 @@ function App() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      if (!supabaseUrl || !supabaseKey) {
-        addDebug('❌ Supabase environment variables are missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
-      } else {
-        addDebug('✅ Supabase environment variables detected.');
-      }
-
       if (tg) {
-        addDebug('ℹ️ Telegram WebApp object detected. Initializing...');
         tg.ready();
         tg.expand();
         
@@ -109,55 +97,30 @@ function App() {
         // Authenticate user
         const telegramUser = tg.initDataUnsafe?.user;
         if (telegramUser) {
-          addDebug(`👤 Telegram user received: id=${telegramUser.id}, username=${telegramUser.username || 'n/a'}`);
+          if (!supabaseUrl || !supabaseKey) {
+            console.error('Supabase environment variables are missing. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+            return;
+          }
+
           const userData = await getOrCreateUser(telegramUser);
           if (userData) {
             setUser(userData);
-            addDebug(`✅ User authenticated (telegram_id=${userData.telegram_id}).`);
           } else {
-            addDebug('❌ Failed to authenticate user. See Supabase logs for details.');
+            console.error('Failed to authenticate user. See Supabase logs for details.');
           }
         } else {
-          addDebug('⚠️ No Telegram user data available. The app might not be running inside Telegram.');
+          console.warn('No Telegram user data available. The app might not be running inside Telegram.');
         }
       } else {
-        addDebug('❌ Telegram WebApp object not found. Are you running inside Telegram?');
+        console.error('Telegram WebApp object not found. Are you running inside Telegram?');
       }
       setIsAuthenticating(false);
     };
 
     initializeApp();
-  }, [addDebug]);
+  }, []);
 
   const CurrentPage = tabs.find(tab => tab.id === currentTab)?.Component || HomePage;
-
-  const DebugPanel = (
-    authDebug.length > 0 && (
-      <div style={{
-        position: 'fixed',
-        bottom: '16px',
-        left: '16px',
-        right: '16px',
-        zIndex: 9999,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        color: '#fff',
-        padding: '12px',
-        borderRadius: '12px',
-        maxHeight: '40vh',
-        overflowY: 'auto',
-        fontSize: '12px',
-      }}>
-        <details open>
-          <summary style={{ cursor: 'pointer', marginBottom: '8px' }}>Connection Status</summary>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {authDebug.map((msg, index) => (
-              <li key={index}>{msg}</li>
-            ))}
-          </ul>
-        </details>
-      </div>
-    )
-  );
 
   // Show loading state while authenticating
   if (isAuthenticating) {
@@ -172,12 +135,8 @@ function App() {
         }}>
           <div style={{ textAlign: 'center' }}>
             <p>Loading...</p>
-            <p style={{ fontSize: '12px', marginTop: '8px', color: 'var(--tgui--hint_color)' }}>
-              Please wait while we connect to Supabase and Telegram.
-            </p>
           </div>
         </div>
-        {DebugPanel}
       </AppRoot>
     );
   }
@@ -194,16 +153,13 @@ function App() {
           padding: '24px',
           textAlign: 'center',
         }}>
-          <div>
-            <p style={{ color: 'var(--tgui--text_color)', marginBottom: '8px' }}>
-              We could not verify your account automatically.
-            </p>
-            <p style={{ color: 'var(--tgui--hint_color)', fontSize: '13px' }}>
-              Please review the status panel below and ensure the app is opened inside Telegram with Supabase configured.
-            </p>
-          </div>
+          <p style={{ color: 'var(--tgui--text_color)', marginBottom: '8px' }}>
+            We could not verify your account automatically.
+          </p>
+          <p style={{ color: 'var(--tgui--hint_color)', fontSize: '13px' }}>
+            Please make sure you open the app inside Telegram and configure Supabase credentials.
+          </p>
         </div>
-        {DebugPanel}
       </AppRoot>
     );
   }
@@ -215,7 +171,6 @@ function App() {
         <div className="page-container">
           <EditorPage onClose={() => setIsEditorOpen(false)} />
         </div>
-        {DebugPanel}
       </AppRoot>
     );
   }
@@ -237,7 +192,6 @@ function App() {
           </Tabbar.Item>
         ))}
       </Tabbar>
-      {DebugPanel}
     </AppRoot>
   );
 }

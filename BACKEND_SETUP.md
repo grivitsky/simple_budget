@@ -106,7 +106,7 @@ npm run dev
    - If user exists → Return existing user
    - If new user → Create account with defaults:
      - `ai_features_enabled: false`
-     - `default_currency: 'PLN'`
+     - `default_currency: 'USD'`
 
 ### User Object Structure
 
@@ -120,7 +120,7 @@ npm run dev
   language_code: "en",           // Telegram language
   photo_url: "https://...",      // Profile photo
   ai_features_enabled: false,    // AI toggle
-  default_currency: "PLN",       // Default currency
+  default_currency: "USD",       // Default currency
   created_at: "2025-01-01...",  // Creation timestamp
   updated_at: "2025-01-01..."   // Last update timestamp
 }

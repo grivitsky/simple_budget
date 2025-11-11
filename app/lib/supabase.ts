@@ -4,13 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Debug: Log configuration status (remove in production)
-console.log('Supabase Config:', {
-  url: supabaseUrl ? '✓ Set' : '✗ Missing',
-  key: supabaseAnonKey ? '✓ Set' : '✗ Missing',
-  urlValue: supabaseUrl.slice(0, 20) + '...' // Show first 20 chars
-});
-
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

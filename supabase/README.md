@@ -55,7 +55,7 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 | language_code | TEXT | Telegram language code |
 | photo_url | TEXT | Profile photo URL |
 | ai_features_enabled | BOOLEAN | AI features toggle (default: false) |
-| default_currency | TEXT | User's default currency (default: 'PLN') |
+| default_currency | TEXT | User's default currency (default: 'USD') |
 | created_at | TIMESTAMP | Account creation time |
 | updated_at | TIMESTAMP | Last update time |
 
