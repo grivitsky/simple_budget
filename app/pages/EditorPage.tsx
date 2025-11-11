@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IconButton } from '../../src/components/Blocks/IconButton/IconButton';
 import { Input } from '../../src/components/Form/Input/Input';
 import { Select } from '../../src/components/Form/Select/Select';
+import { Card } from '../../src/components/Blocks/Card/Card';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon28Check } from '../../src/icons/28/check';
 import { Icon28Bin } from '../../src/icons/28/bin';
@@ -73,13 +74,15 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
       </div>
 
       {/* Section 2: Amount and Store Name */}
-      <div style={{
+      <Card style={{
+        backgroundColor: 'var(--tgui--bg_color)',
+        borderRadius: '12px',
+        margin: '0 0 24px 0',
+        padding: '40px 16px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         gap: '12px',
-        marginBottom: '24px',
       }}>
         {/* Amount Input */}
         <div style={{
@@ -133,7 +136,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           onChange={(e) => setStoreName(e.target.value)}
           style={{ width: '240px', textAlign: 'center' }}
         />
-      </div>
+      </Card>
 
       {/* Section 3: Category Select */}
       <div style={{
