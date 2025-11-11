@@ -49,7 +49,6 @@ const BudgetPage = () => {
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
-            margin: '0px 0px 0px 6px',
           }}>
             -PLN
           </span>
