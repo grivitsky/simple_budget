@@ -17,7 +17,7 @@ const BudgetPage = () => {
         alignItems: 'center',
         marginBottom: '16px',
       }}>
-        <Title level="3" weight="1" style={{ color: 'var(--tgui--text_color)' }}>
+        <Title level="2" weight="1" style={{ color: 'var(--tgui--text_color)' }}>
           Categorise
         </Title>
         <Button mode="plain" size="s">
