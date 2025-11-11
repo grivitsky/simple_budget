@@ -42,41 +42,45 @@ const BudgetPage = () => {
       minHeight: '100vh',
       padding: '16px',
     }}>
-      {/* Section 1: Header with Title and Button */}
+      {/* Sticky Wrapper for Sections 1 & 2 */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '16px',
         position: 'sticky',
         top: 0,
-        zIndex: 3,
+        zIndex: 2,
         backgroundColor: 'var(--tgui--secondary_bg_color)',
         paddingTop: '16px',
         marginTop: '-16px',
+        marginLeft: '-16px',
+        marginRight: '-16px',
+        paddingLeft: '16px',
+        paddingRight: '16px',
       }}>
-        <Title level="2" weight="1" style={{ color: 'var(--tgui--text_color)' }}>
-          Categorise
-        </Title>
-        <Button mode="plain" size="s">
-          5 Items Left
-        </Button>
-      </div>
+        {/* Section 1: Header with Title and Button */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}>
+          <Title level="2" weight="1" style={{ color: 'var(--tgui--text_color)' }}>
+            Categorise
+          </Title>
+          <Button mode="plain" size="s">
+            5 Items Left
+          </Button>
+        </div>
 
-      {/* Section 2: Transaction Card */}
-      <Card style={{
-        backgroundColor: 'var(--tgui--bg_color)',
-        borderRadius: '12px',
-        margin: '0 0 24px 0',
-        padding: '40px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '12px',
-        position: 'sticky',
-        top: '72px',
-        zIndex: 2,
-      }}>
+        {/* Section 2: Transaction Card */}
+        <Card style={{
+          backgroundColor: 'var(--tgui--bg_color)',
+          borderRadius: '12px',
+          margin: '0 0 24px 0',
+          padding: '40px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
         {/* Amount Wrapper */}
         <div style={{
           display: 'flex',
@@ -125,6 +129,7 @@ const BudgetPage = () => {
           </Subheadline>
         </div>
       </Card>
+      </div>
 
       {/* Section 3: Category Selection */}
       <div style={{
