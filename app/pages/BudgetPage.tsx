@@ -74,7 +74,7 @@ const BudgetPage = () => {
           alignItems: 'flex-end',
           gap: '4px',
         }}>
-          <div style={{ paddingBottom: '4px' }}>
+          <div style={{ paddingBottom: '2px' }}>
             <span style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
               fontSize: '28px',
