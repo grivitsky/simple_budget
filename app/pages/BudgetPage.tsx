@@ -4,7 +4,6 @@ import { Card } from '../../src/components/Blocks/Card/Card';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
-import { Section } from '../../src/components/Blocks/Section/Section';
 
 // Category Circle Component
 const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
@@ -119,48 +118,54 @@ const BudgetPage = () => {
       </Card>
 
       {/* Section 3: Category Selection */}
-      <Section
-        header={
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0px',
+      <div>
+        {/* Section Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 16px 8px 16px',
+        }}>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 400,
+            textTransform: 'uppercase',
+            color: 'var(--tgui--section_header_text_color)',
+            letterSpacing: '-0.08px',
           }}>
-            <span style={{
-              fontSize: '13px',
-              fontWeight: 400,
-              textTransform: 'uppercase',
-              color: 'var(--tgui--section_header_text_color)',
-              letterSpacing: '-0.08px',
-            }}>
-              Select Category
-            </span>
-            <Button
-              mode="plain"
-              size="s"
-              style={{
-                minWidth: 'auto',
-                height: 'auto',
-                padding: 0,
-              }}
-            >
-              10 Categories
-            </Button>
-          </div>
-        }
-      >
-        {categories.map((category, index) => (
-          <Cell
-            key={index}
-            before={<CategoryCircle emoji={category.emoji} color={category.color} />}
+            Select Category
+          </span>
+          <Button
+            mode="plain"
+            size="s"
+            style={{
+              minWidth: 'auto',
+              height: 'auto',
+              padding: 0,
+            }}
           >
-            <Text weight="2" style={{ color: category.textColor }}>
-              {category.name}
-            </Text>
-          </Cell>
-        ))}
-      </Section>
+            10 Categories
+          </Button>
+        </div>
+
+        {/* Categories List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {categories.map((category, index) => (
+            <Cell
+              key={index}
+              style={{
+                backgroundColor: `${category.color}33`, // 20% opacity
+                borderRadius: '16px',
+              }}
+              before={<CategoryCircle emoji={category.emoji} color={category.color} />}
+            >
+              <Text weight="3" style={{ color: category.textColor }}>
+                {category.name}
+              </Text>
+            </Cell>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
