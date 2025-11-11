@@ -4,6 +4,7 @@ import { Card } from '../../src/components/Blocks/Card/Card';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
+import { Section } from '../../src/components/Blocks/Section/Section';
 
 const BudgetPage = () => {
   return (
@@ -88,64 +89,62 @@ const BudgetPage = () => {
       </Card>
 
       {/* Section 3: Category Selection */}
-      <div>
-        {/* Section Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '16px 16px 8px 16px',
-        }}>
-          <span style={{
-            fontSize: '13px',
-            fontWeight: 400,
-            textTransform: 'uppercase',
-            color: 'var(--tgui--section_header_text_color)',
-            letterSpacing: '-0.08px',
+      <Section
+        header={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px',
           }}>
-            Select Category
-          </span>
-          <Button
-            mode="plain"
-            size="s"
-            style={{
-              minWidth: 'auto',
-              height: 'auto',
-              padding: 0,
-            }}
-          >
-            10 Categories
-          </Button>
-        </div>
-
-        {/* Categories List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <Cell
-            style={{
-              backgroundColor: 'var(--tgui--bg_color)',
-              borderRadius: '16px',
-            }}
-            before={
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: '#61B5F7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '16px',
-              }}>
-                🍔
-              </div>
-            }
-          >
-            <Text weight="3" style={{ color: '#2E9DF4' }}>
-              Eating out
-            </Text>
-          </Cell>
-        </div>
-      </div>
+            <span style={{
+              fontSize: '13px',
+              fontWeight: 400,
+              textTransform: 'uppercase',
+              color: 'var(--tgui--section_header_text_color)',
+              letterSpacing: '-0.08px',
+            }}>
+              Select Category
+            </span>
+            <Button
+              mode="plain"
+              size="s"
+              style={{
+                minWidth: 'auto',
+                height: 'auto',
+                padding: 0,
+              }}
+            >
+              10 Categories
+            </Button>
+          </div>
+        }
+      >
+        <Cell
+          style={{
+            backgroundColor: 'rgba(97, 181, 247, 0.2)',
+            borderRadius: '16px',
+          }}
+          before={
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#61B5F7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+            }}>
+              🍔
+            </div>
+          }
+        >
+          <Text weight="3" style={{ color: '#2E9DF4' }}>
+            Eating out
+          </Text>
+        </Cell>
+      </Section>
     </div>
   );
 };
