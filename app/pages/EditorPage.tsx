@@ -29,6 +29,15 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
   const [storeName, setStoreName] = useState('Biedronka');
   const [selectedCategory, setSelectedCategory] = useState('Eating Out');
 
+  // Handle amount input - allow only numbers, comma, and period
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only digits, comma, and period
+    if (/^[\d.,]*$/.test(value)) {
+      setAmount(value);
+    }
+  };
+
   return (
     <div style={{
       backgroundColor: 'var(--tgui--secondary_bg_color)',
@@ -76,6 +85,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <div style={{
           display: 'flex',
           alignItems: 'flex-end',
+          justifyContent: 'center',
           gap: '4px',
         }}>
           <div style={{ paddingBottom: '2px' }}>
@@ -95,7 +105,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
             inputMode="decimal"
             autoFocus
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={handleAmountChange}
             style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
               fontSize: '44px',
@@ -124,7 +134,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
       <Select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        style={{ paddingTop: '4px', paddingBottom: '4px' }}
+        style={{ paddingTop: '12px', paddingBottom: '12px' }}
       >
         {categories.map((category) => (
           <option key={category.name} value={category.name}>
