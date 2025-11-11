@@ -136,17 +136,22 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
       </div>
 
       {/* Section 3: Category Select */}
-      <Select
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-        style={{ paddingTop: '12px', paddingBottom: '12px' }}
-      >
-        {categories.map((category) => (
-          <option key={category.name} value={category.name}>
-            {category.emoji} {category.name}
-          </option>
-        ))}
-      </Select>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <Select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={{ paddingTop: '14px', paddingBottom: '14px', width: '240px' }}
+        >
+          {categories.map((category) => (
+            <option key={category.name} value={category.name}>
+              {category.emoji} {category.name}
+            </option>
+          ))}
+        </Select>
+      </div>
     </div>
   );
 };
