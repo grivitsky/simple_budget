@@ -122,6 +122,8 @@ const BudgetPage = () => {
         backgroundColor: 'var(--tgui--bg_color)',
         borderRadius: '12px',
         padding: '16px',
+        marginLeft: '-16px',
+        marginRight: '-16px',
       }}>
         {/* Section Header */}
         <div style={{
