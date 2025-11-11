@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { IconButton } from '../../src/components/Blocks/IconButton/IconButton';
 import { Input } from '../../src/components/Form/Input/Input';
 import { Select } from '../../src/components/Form/Select/Select';
@@ -28,7 +28,6 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
   const [amount, setAmount] = useState('2,043.12');
   const [storeName, setStoreName] = useState('Biedronka');
   const [selectedCategory, setSelectedCategory] = useState('Eating Out');
-  const amountInputRef = useRef<HTMLInputElement>(null);
 
   // Handle amount input - allow only numbers, comma, and period
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,31 +35,6 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
     // Allow only digits, comma, and period
     if (/^[\d.,]*$/.test(value)) {
       setAmount(value);
-    }
-  };
-
-  // Keep amount input focused by default
-  const handleAmountBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Check if focus is moving to name input or select
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    const isMovingToInput = relatedTarget?.tagName === 'INPUT' || relatedTarget?.tagName === 'SELECT';
-    
-    // If not moving to another input, refocus amount
-    if (!isMovingToInput) {
-      setTimeout(() => {
-        amountInputRef.current?.focus();
-      }, 0);
-    }
-  };
-  
-  // Refocus amount when name input loses focus
-  const handleNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Check if focus is moving to select
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (relatedTarget?.tagName !== 'SELECT') {
-      setTimeout(() => {
-        amountInputRef.current?.focus();
-      }, 0);
     }
   };
 
@@ -113,7 +87,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           alignItems: 'flex-end',
           justifyContent: 'center',
           gap: '4px',
-          marginRight: '-32px',
+          marginRight: '-28px',
         }}>
           <div style={{ paddingBottom: '6px' }}>
             <span style={{
@@ -128,13 +102,11 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
             </span>
           </div>
           <input
-            ref={amountInputRef}
             type="text"
             inputMode="decimal"
             autoFocus
             value={amount}
             onChange={handleAmountChange}
-            onBlur={handleAmountBlur}
             size={amount.length || 1}
             style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -148,7 +120,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
               backgroundColor: 'transparent',
               width: `${(amount.length || 1) * 1}ch`,
               minWidth: '40px',
-              maxWidth: '240px',
+              maxWidth: '260px',
               padding: '0',
               textAlign: 'left',
             }}
@@ -159,7 +131,6 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <Input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          onBlur={handleNameBlur}
           style={{ width: '240px', textAlign: 'center' }}
         />
       </div>
