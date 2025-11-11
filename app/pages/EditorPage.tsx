@@ -90,7 +90,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           alignItems: 'flex-end',
           justifyContent: 'center',
           gap: '4px',
-          marginRight: '-24px',
+          marginRight: '-20px',
         }}>
           <div style={{ paddingBottom: '6px' }}>
             <span style={{
@@ -134,7 +134,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <Input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          style={{ width: '240px', textAlign: 'center' }}
+          style={{ width: '240px', textAlign: 'center', backgroundColor: 'var(--tgui--secondary_bg_color)' }}
         />
       </Card>
 
