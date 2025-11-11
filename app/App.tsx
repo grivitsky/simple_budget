@@ -11,6 +11,8 @@ import BudgetPage from './pages/BudgetPage';
 import StatsPage from './pages/StatsPage';
 import SettingsPage from './pages/SettingsPage';
 import EditorPage from './pages/EditorPage';
+import { getOrCreateUser } from './lib/userService';
+import type { User } from './lib/supabase';
 
 /**
  * Platform Detection System
@@ -74,21 +76,62 @@ const tabs = [
 function App() {
   const [currentTab, setCurrentTab] = useState<TabId>('home');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
 
   useEffect(() => {
-    // Initialize Telegram Web App
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      
-      // Set Telegram interface colors to match app background
-      tg.setHeaderColor('secondary_bg_color');
-      tg.setBackgroundColor(tg.themeParams.secondary_bg_color || '#efeff3');
-    }
+    // Initialize Telegram Web App and authenticate user
+    const initializeApp = async () => {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        
+        // Set Telegram interface colors to match app background
+        tg.setHeaderColor('secondary_bg_color');
+        tg.setBackgroundColor(tg.themeParams.secondary_bg_color || '#efeff3');
+
+        // Authenticate user
+        const telegramUser = tg.initDataUnsafe?.user;
+        if (telegramUser) {
+          console.log('Telegram user data:', telegramUser);
+          const userData = await getOrCreateUser(telegramUser);
+          if (userData) {
+            setUser(userData);
+            console.log('User authenticated:', userData);
+          } else {
+            console.error('Failed to authenticate user');
+          }
+        } else {
+          console.warn('No Telegram user data available');
+        }
+      }
+      setIsAuthenticating(false);
+    };
+
+    initializeApp();
   }, []);
 
   const CurrentPage = tabs.find(tab => tab.id === currentTab)?.Component || HomePage;
+
+  // Show loading state while authenticating
+  if (isAuthenticating) {
+    return (
+      <AppRoot>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: 'var(--tgui--secondary_bg_color)',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </AppRoot>
+    );
+  }
 
   // If editor is open, show EditorPage and hide Tabbar
   if (isEditorOpen) {
@@ -104,7 +147,7 @@ function App() {
   return (
     <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
       <div className="page-container">
-        <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} />
+        <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} user={user} />
       </div>
       <Tabbar>
         {tabs.map(({ id, text, Icon }) => (

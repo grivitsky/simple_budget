@@ -105,6 +105,7 @@
   },
   "dependencies": {
     "@floating-ui/react-dom": "^2.0.8",
+    "@supabase/supabase-js": "^2.81.1",
     "@swc/helpers": "^0.5.3",
     "@twa-dev/types": "^7.0.0",
     "@xelene/vaul-with-scroll-fix": "0.1.4"
