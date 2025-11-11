@@ -134,7 +134,13 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <Input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          style={{ width: '240px', textAlign: 'center', backgroundColor: 'var(--tgui--secondary_bg_color)' }}
+          style={{ 
+            width: '240px', 
+            textAlign: 'center', 
+            backgroundColor: 'var(--tgui--secondary_bg_color)',
+            padding: '14px 16px',
+            borderRadius: '12px'
+          }}
         />
       </Card>
 
