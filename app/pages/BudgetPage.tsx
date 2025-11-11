@@ -48,6 +48,12 @@ const BudgetPage = () => {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '16px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 3,
+        backgroundColor: 'var(--tgui--secondary_bg_color)',
+        paddingTop: '16px',
+        marginTop: '-16px',
       }}>
         <Title level="2" weight="1" style={{ color: 'var(--tgui--text_color)' }}>
           Categorise
@@ -67,6 +73,9 @@ const BudgetPage = () => {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '12px',
+        position: 'sticky',
+        top: '72px',
+        zIndex: 2,
       }}>
         {/* Amount Wrapper */}
         <div style={{
