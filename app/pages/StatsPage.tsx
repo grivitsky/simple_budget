@@ -4,6 +4,7 @@ import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
+import { Divider } from '../../src/components/Misc/Divider/Divider';
 
 // Category Circle Component
 const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
@@ -121,6 +122,15 @@ const StatsPage = () => {
           Year
         </TabsList.Item>
       </TabsList>
+
+      {/* Edge-to-Edge Divider */}
+      <Divider
+        style={{
+          marginLeft: '-16px',
+          marginRight: '-16px',
+          marginBottom: '16px',
+        }}
+      />
 
       {/* 3. Category Section with Custom Header */}
       <div>
