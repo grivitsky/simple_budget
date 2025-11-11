@@ -22,6 +22,37 @@ const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) =
   </div>
 );
 
+// Daily transactions data
+const dailyTransactions = [
+  {
+    date: 'Tue, 4 NOV',
+    total: '-100.88 PLN',
+    transactions: [
+      { emoji: '🍔', name: 'McDonalds', time: '12:00 AM', amount: '-30.32 PLN', type: 'Spent', color: '#61B5F7' },
+      { emoji: '🛒', name: 'Biedronka', time: '3:45 PM', amount: '-45.50 PLN', type: 'Spent', color: '#95E1D3' },
+      { emoji: '☕', name: 'Starbucks', time: '9:15 AM', amount: '-25.06 PLN', type: 'Spent', color: '#AA96DA' },
+    ]
+  },
+  {
+    date: 'Mon, 3 NOV',
+    total: '-245.60 PLN',
+    transactions: [
+      { emoji: '🚗', name: 'Shell Gas', time: '7:30 AM', amount: '-180.00 PLN', type: 'Spent', color: '#4ECDC4' },
+      { emoji: '🎬', name: 'Cinema City', time: '8:00 PM', amount: '-45.00 PLN', type: 'Spent', color: '#AA96DA' },
+      { emoji: '🍕', name: 'Pizza Hut', time: '6:30 PM', amount: '-20.60 PLN', type: 'Spent', color: '#FCBAD3' },
+    ]
+  },
+  {
+    date: 'Sun, 2 NOV',
+    total: '-320.45 PLN',
+    transactions: [
+      { emoji: '👕', name: 'H&M', time: '2:00 PM', amount: '-150.00 PLN', type: 'Spent', color: '#FCBAD3' },
+      { emoji: '🏠', name: 'IKEA', time: '4:30 PM', amount: '-120.45 PLN', type: 'Spent', color: '#FF6B6B' },
+      { emoji: '📱', name: 'Apple Store', time: '11:00 AM', amount: '-50.00 PLN', type: 'Spent', color: '#FFF176' },
+    ]
+  },
+];
+
 const HomePage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
 
@@ -111,58 +142,66 @@ const HomePage = () => {
         marginRight: '-16px',
         marginBottom: '-20px',
       }}>
-        <Section
-          header={
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '0px',
-            }}>
-              <span style={{
-                fontSize: '13px',
-                fontWeight: 400,
-                textTransform: 'uppercase',
-                color: 'var(--tgui--section_header_text_color)',
-                letterSpacing: '-0.08px',
+        {dailyTransactions.map((day, dayIndex) => (
+          <Section
+            key={dayIndex}
+            header={
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0px',
+                marginBottom: '8px',
+                marginTop: dayIndex === 0 ? '16px' : '0px',
               }}>
-                Tue, 4 NOV
-              </span>
-              <Button
-                mode="plain"
-                size="s"
-                style={{
-                  minWidth: 'auto',
-                  height: 'auto',
-                  padding: 0,
-                }}
-              >
-                -100.88 PLN
-              </Button>
-            </div>
-          }
-        >
-          <Cell
-            before={<TransactionCircle emoji="🍔" color="#61B5F7" />}
-            subtitle={
-              <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
-                12:00 AM
-              </Subheadline>
-            }
-            after={
-              <div style={{ textAlign: 'right' }}>
-                <Text weight="1" style={{ color: 'var(--tgui--text_color)', display: 'block' }}>
-                  -30,32 PLN
-                </Text>
-                <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
-                  Spent
-                </Subheadline>
+                <span style={{
+                  fontSize: '13px',
+                  fontWeight: 400,
+                  textTransform: 'uppercase',
+                  color: 'var(--tgui--section_header_text_color)',
+                  letterSpacing: '-0.08px',
+                }}>
+                  {day.date}
+                </span>
+                <Button
+                  mode="plain"
+                  size="s"
+                  style={{
+                    minWidth: 'auto',
+                    height: 'auto',
+                    padding: 0,
+                  }}
+                >
+                  {day.total}
+                </Button>
               </div>
             }
           >
-            <Text weight="3">McDonalds</Text>
-          </Cell>
-        </Section>
+            {day.transactions.map((transaction, transactionIndex) => (
+              <Cell
+                key={transactionIndex}
+                before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
+                subtitle={
+                  <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
+                    {transaction.time}
+                  </Subheadline>
+                }
+                after={
+                  <div style={{ textAlign: 'right' }}>
+                    <Text weight="1" style={{ color: 'var(--tgui--text_color)', display: 'block' }}>
+                      {transaction.amount}
+                    </Text>
+                    <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
+                      {transaction.type}
+                    </Subheadline>
+                  </div>
+                }
+              >
+                <Text weight="3">{transaction.name}</Text>
+              </Cell>
+            ))}
+          </Section>
+        ))}
       </div>
     </div>
   );
