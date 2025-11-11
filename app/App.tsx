@@ -52,24 +52,28 @@ const tabs = [
     Icon: Icon28Addhome,
     text: 'Home',
     Component: HomePage,
+    needsUser: true,
   },
   {
     id: 'budget' as TabId,
     Icon: Icon28Archive,
     text: 'Organize',
     Component: BudgetPage,
+    needsUser: false,
   },
   {
     id: 'stats' as TabId,
     Icon: Icon28Stats,
     text: 'Stats',
     Component: StatsPage,
+    needsUser: false,
   },
   {
     id: 'settings' as TabId,
     Icon: Icon28BotMenu,
     text: 'Settings',
     Component: SettingsPage,
+    needsUser: true,
   },
 ];
 
@@ -120,7 +124,9 @@ function App() {
     initializeApp();
   }, []);
 
-  const CurrentPage = tabs.find(tab => tab.id === currentTab)?.Component || HomePage;
+  const currentTabData = tabs.find(tab => tab.id === currentTab);
+  const CurrentPage = currentTabData?.Component || HomePage;
+  const needsUser = currentTabData?.needsUser || false;
 
   // Show loading state while authenticating
   if (isAuthenticating) {
@@ -178,7 +184,11 @@ function App() {
   return (
     <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
       <div className="page-container">
-        <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} user={user} />
+        {needsUser ? (
+          <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} user={user} />
+        ) : (
+          <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} />
+        )}
       </div>
       <Tabbar>
         {tabs.map(({ id, text, Icon }) => (

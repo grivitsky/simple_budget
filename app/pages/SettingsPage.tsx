@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar } from '../../src/components/Blocks/Avatar/Avatar';
 import { Headline } from '../../src/components/Typography/Headline/Headline';
 import { Caption } from '../../src/components/Typography/Caption/Caption';
@@ -11,36 +11,76 @@ import { Modal } from '../../src/components/Overlays/Modal/Modal';
 import { Divider } from '../../src/components/Misc/Divider/Divider';
 import { Selectable } from '../../src/components/Form/Selectable/Selectable';
 import { Text } from '../../src/components/Typography/Text/Text';
+import { getAllCurrencies, type Currency } from '../lib/currencyService';
+import { updateUserSettings } from '../lib/userService';
+import type { User } from '../lib/supabase';
 
-const currencies = [
-  { code: 'PLN', name: 'Polish Zloty' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'CHF', name: 'Swiss Franc' },
-  { code: 'USD', name: 'US Dollar' },
-  { code: 'GBP', name: 'British Pound' },
-  { code: 'JPY', name: 'Japanese Yen' },
-  { code: 'AUD', name: 'Australian Dollar' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'CNY', name: 'Chinese Yuan' },
-  { code: 'SEK', name: 'Swedish Krona' },
-  { code: 'NOK', name: 'Norwegian Krone' },
-  { code: 'DKK', name: 'Danish Krone' },
-  { code: 'CZK', name: 'Czech Koruna' },
-  { code: 'HUF', name: 'Hungarian Forint' },
-  { code: 'RON', name: 'Romanian Leu' },
-  { code: 'BGN', name: 'Bulgarian Lev' },
-  { code: 'TRY', name: 'Turkish Lira' },
-  { code: 'INR', name: 'Indian Rupee' },
-  { code: 'BRL', name: 'Brazilian Real' },
-  { code: 'MXN', name: 'Mexican Peso' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'SGD', name: 'Singapore Dollar' },
-  { code: 'HKD', name: 'Hong Kong Dollar' },
-];
+interface SettingsPageProps {
+  user?: User | null;
+}
 
-const SettingsPage = () => {
+const SettingsPage = ({ user }: SettingsPageProps) => {
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('PLN');
+  const [selectedCurrency, setSelectedCurrency] = useState(user?.default_currency || 'USD');
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Load currencies from database
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      const data = await getAllCurrencies();
+      setCurrencies(data);
+    };
+    loadCurrencies();
+  }, []);
+
+  // Update selected currency when user data changes
+  useEffect(() => {
+    if (user?.default_currency) {
+      setSelectedCurrency(user.default_currency);
+    }
+  }, [user]);
+
+  // Get user's initials for avatar
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    const firstInitial = user.first_name?.[0] || '';
+    const lastInitial = user.last_name?.[0] || '';
+    return (firstInitial + lastInitial).toUpperCase() || 'U';
+  };
+
+  // Get user's display name
+  const getUserName = () => {
+    if (!user) return 'User';
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    return `${firstName} ${lastName}`.trim() || 'User';
+  };
+
+  // Handle currency selection
+  const handleCurrencySelect = async (currencyCode: string) => {
+    if (!user) return;
+    
+    setIsUpdating(true);
+    setSelectedCurrency(currencyCode);
+    
+    // Update in database
+    const result = await updateUserSettings(user.telegram_id, {
+      default_currency: currencyCode,
+    });
+    
+    if (result) {
+      console.log('✅ Currency updated successfully');
+      // Close modal after short delay
+      setTimeout(() => {
+        setIsCurrencyModalOpen(false);
+        setIsUpdating(false);
+      }, 300);
+    } else {
+      console.error('❌ Failed to update currency');
+      setIsUpdating(false);
+    }
+  };
   return (
     <div style={{ 
       backgroundColor: 'var(--tgui--secondary_bg_color)',
@@ -58,7 +98,8 @@ const SettingsPage = () => {
       }}>
         <Avatar
           size={96}
-          acronym="NS"
+          src={user?.photo_url || undefined}
+          acronym={getUserInitials()}
         />
         <Headline 
           weight="2" 
@@ -67,7 +108,7 @@ const SettingsPage = () => {
             color: 'var(--tgui--text_color)',
           }}
         >
-          Name Surname
+          {getUserName()}
         </Headline>
         <Caption 
           level="1"
@@ -132,13 +173,14 @@ const SettingsPage = () => {
             {currencies.map((currency, index) => (
               <div key={currency.code}>
                 <Cell
-                  onClick={() => setSelectedCurrency(currency.code)}
+                  onClick={() => handleCurrencySelect(currency.code)}
+                  disabled={isUpdating}
                   style={{
                     paddingTop: '14px',
                     paddingBottom: '14px',
                   }}
                   before={
-                    <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                       <Text 
                         weight="3"
                         style={{ 
@@ -147,14 +189,24 @@ const SettingsPage = () => {
                           flexShrink: 0,
                         }}
                       >
-                        {currency.code}
+                        {currency.symbol}
                       </Text>
-                      <Text 
-                        weight="3"
-                        style={{ color: 'var(--tgui--text_color)' }}
-                      >
-                        {currency.name}
-                      </Text>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <Text 
+                          weight="3"
+                          style={{ color: 'var(--tgui--text_color)' }}
+                        >
+                          {currency.name}
+                        </Text>
+                        <Text 
+                          style={{ 
+                            color: 'var(--tgui--hint_color)',
+                            fontSize: '13px',
+                          }}
+                        >
+                          {currency.code}
+                        </Text>
+                      </div>
                     </div>
                   }
                   after={
@@ -162,7 +214,8 @@ const SettingsPage = () => {
                       name="currency"
                       value={currency.code}
                       checked={selectedCurrency === currency.code}
-                      onChange={(e) => setSelectedCurrency(e.target.value)}
+                      onChange={() => {}} // Handled by onClick
+                      disabled={isUpdating}
                     />
                   }
                 >
