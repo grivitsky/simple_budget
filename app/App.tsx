@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import BudgetPage from './pages/BudgetPage';
 import StatsPage from './pages/StatsPage';
 import SettingsPage from './pages/SettingsPage';
+import EditorPage from './pages/EditorPage';
 
 /**
  * Platform Detection System
@@ -72,6 +73,7 @@ const tabs = [
 
 function App() {
   const [currentTab, setCurrentTab] = useState<TabId>('home');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   useEffect(() => {
     // Initialize Telegram Web App
@@ -88,10 +90,21 @@ function App() {
 
   const CurrentPage = tabs.find(tab => tab.id === currentTab)?.Component || HomePage;
 
+  // If editor is open, show EditorPage and hide Tabbar
+  if (isEditorOpen) {
+    return (
+      <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
+        <div className="page-container">
+          <EditorPage onClose={() => setIsEditorOpen(false)} />
+        </div>
+      </AppRoot>
+    );
+  }
+
   return (
     <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
       <div className="page-container">
-        <CurrentPage />
+        <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} />
       </div>
       <Tabbar>
         {tabs.map(({ id, text, Icon }) => (

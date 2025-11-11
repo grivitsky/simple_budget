@@ -5,7 +5,6 @@ import { Button } from '../../src/components/Blocks/Button/Button';
 import { Section } from '../../src/components/Blocks/Section/Section';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
-import EditorPage from './EditorPage';
 
 // Transaction Circle Component
 const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) => (
@@ -54,14 +53,12 @@ const dailyTransactions = [
   },
 ];
 
-const HomePage = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+interface HomePageProps {
+  onOpenEditor?: () => void;
+}
 
-  // If editor is open, show EditorPage instead
-  if (isEditorOpen) {
-    return <EditorPage onClose={() => setIsEditorOpen(false)} />;
-  }
+const HomePage = ({ onOpenEditor }: HomePageProps) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
 
   return (
     <div style={{
@@ -189,7 +186,7 @@ const HomePage = () => {
             {day.transactions.map((transaction, transactionIndex) => (
               <Cell
                 key={transactionIndex}
-                onClick={() => setIsEditorOpen(true)}
+                onClick={onOpenEditor}
                 before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
                 subtitle={
                   <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>

@@ -47,19 +47,19 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <IconButton
           mode="bezeled"
           size="s"
-          onClick={onClose}
+          style={{
+            color: 'var(--tgui--destructive_text_color)',
+            backgroundColor: 'var(--tgui--destructive_background)',
+          }}
         >
-          <Icon28Check />
+          <Icon28Bin />
         </IconButton>
         <IconButton
           mode="bezeled"
           size="s"
-          style={{
-            color: 'var(--tgui--destructive_text_color)',
-            backgroundColor: 'var(--tgui--destructive_bg_color)',
-          }}
+          onClick={onClose}
         >
-          <Icon28Bin />
+          <Icon28Check />
         </IconButton>
       </div>
 
@@ -106,7 +106,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <Input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          style={{ width: '240px' }}
+          style={{ width: '240px', textAlign: 'center' }}
         />
       </div>
 
