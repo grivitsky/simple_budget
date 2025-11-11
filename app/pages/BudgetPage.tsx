@@ -118,13 +118,17 @@ const BudgetPage = () => {
       </Card>
 
       {/* Section 3: Category Selection */}
-      <div>
+      <div style={{
+        backgroundColor: 'var(--tgui--bg_color)',
+        borderRadius: '12px',
+        padding: '16px',
+      }}>
         {/* Section Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 16px 8px 16px',
+          marginBottom: '8px',
         }}>
           <span style={{
             fontSize: '13px',
