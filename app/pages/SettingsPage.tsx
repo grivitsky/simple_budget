@@ -97,7 +97,7 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
         paddingRight: '44px',
       }}>
         <Avatar
-          size={96}
+          size={128}
           src={user?.photo_url || undefined}
           acronym={getUserInitials()}
         />
