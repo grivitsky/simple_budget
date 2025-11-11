@@ -165,7 +165,7 @@ const BudgetPage = () => {
               style={{
                 backgroundColor: `${category.color}33`, // 20% opacity
                 borderRadius: '16px',
-                padding: '2px',
+                padding: '4px 16px',
               }}
               before={<CategoryCircle emoji={category.emoji} color={category.color} />}
             >
