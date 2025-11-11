@@ -148,8 +148,8 @@ const HomePage = () => {
           <Section
             key={dayIndex}
             style={{
-              paddingTop: '4px',
-              paddingBottom: '4px',
+              paddingTop: '8px',
+              paddingBottom: '8px',
             }}
             header={
               <div style={{
