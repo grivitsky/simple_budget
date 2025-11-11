@@ -120,7 +120,10 @@ const BudgetPage = () => {
       {/* Section 3: Category Selection */}
       <div style={{
         backgroundColor: 'var(--tgui--bg_color)',
-        borderRadius: '12px',
+        borderTopLeftRadius: '12px',
+        borderTopRightRadius: '12px',
+        borderBottomLeftRadius: '0px',
+        borderBottomRightRadius: '0px',
         padding: '16px',
         marginLeft: '-16px',
         marginRight: '-16px',
