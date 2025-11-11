@@ -11,6 +11,36 @@ import BudgetPage from './pages/BudgetPage';
 import StatsPage from './pages/StatsPage';
 import SettingsPage from './pages/SettingsPage';
 
+/**
+ * Platform Detection System
+ * ========================
+ * 
+ * This app automatically detects and applies iOS-specific styling when running on iOS/macOS devices.
+ * 
+ * How it works:
+ * 1. AppRoot component reads window.Telegram.WebApp.platform on initialization
+ * 2. When platform is 'ios' or 'macos', all UI Kit components automatically use iOS styling
+ * 3. Components use the usePlatform() hook internally to adapt their appearance
+ * 
+ * Components with iOS-specific styling:
+ * - Cell, Button, Tabbar, TabsList, Section, and many others
+ * 
+ * Development Override:
+ * To test iOS styling in development without an iOS device, you can force the platform:
+ * 
+ * <AppRoot platform="ios">
+ *   ...
+ * </AppRoot>
+ * 
+ * Or leave it empty for automatic detection:
+ * <AppRoot>
+ *   ...
+ * </AppRoot>
+ * 
+ * Note: Platform detection happens automatically via Telegram WebApp API.
+ * No manual configuration is needed in production.
+ */
+
 type TabId = 'home' | 'budget' | 'stats' | 'settings';
 
 const tabs = [
@@ -59,7 +89,7 @@ function App() {
   const CurrentPage = tabs.find(tab => tab.id === currentTab)?.Component || HomePage;
 
   return (
-    <AppRoot>
+    <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
       <div className="page-container">
         <CurrentPage />
       </div>

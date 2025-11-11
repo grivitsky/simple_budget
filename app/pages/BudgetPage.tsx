@@ -121,10 +121,6 @@ const BudgetPage = () => {
         }
       >
         <Cell
-          style={{
-            backgroundColor: 'rgba(97, 181, 247, 0.2)',
-            borderRadius: '16px',
-          }}
           before={
             <div style={{
               width: '40px',
