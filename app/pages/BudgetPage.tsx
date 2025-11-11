@@ -8,8 +8,8 @@ import { Text } from '../../src/components/Typography/Text/Text';
 // Category Circle Component
 const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
   <div style={{
-    width: '40px',
-    height: '40px',
+    width: '32px',
+    height: '32px',
     borderRadius: '50%',
     backgroundColor: color,
     display: 'flex',
@@ -133,7 +133,7 @@ const BudgetPage = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '8px',
+          marginBottom: '20px',
         }}>
           <span style={{
             fontSize: '13px',
@@ -158,13 +158,14 @@ const BudgetPage = () => {
         </div>
 
         {/* Categories List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {categories.map((category, index) => (
             <Cell
               key={index}
               style={{
                 backgroundColor: `${category.color}33`, // 20% opacity
                 borderRadius: '16px',
+                padding: '16px',
               }}
               before={<CategoryCircle emoji={category.emoji} color={category.color} />}
             >
