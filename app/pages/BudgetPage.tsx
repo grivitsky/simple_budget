@@ -6,6 +6,36 @@ import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Section } from '../../src/components/Blocks/Section/Section';
 
+// Category Circle Component
+const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
+  <div style={{
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    backgroundColor: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '16px',
+  }}>
+    {emoji}
+  </div>
+);
+
+// Test categories data
+const categories = [
+  { emoji: '🍔', name: 'Eating Out', color: '#61B5F7', textColor: '#2E9DF4' },
+  { emoji: '🏠', name: 'Housing', color: '#FF6B6B', textColor: '#E74C3C' },
+  { emoji: '🚗', name: 'Transport', color: '#4ECDC4', textColor: '#16A085' },
+  { emoji: '🛒', name: 'Groceries', color: '#95E1D3', textColor: '#45B7A0' },
+  { emoji: '💊', name: 'Healthcare', color: '#F38181', textColor: '#C0392B' },
+  { emoji: '🎬', name: 'Entertainment', color: '#AA96DA', textColor: '#7B68B8' },
+  { emoji: '👕', name: 'Shopping', color: '#FCBAD3', textColor: '#E91E63' },
+  { emoji: '📱', name: 'Utilities', color: '#FFF176', textColor: '#F57C00' },
+  { emoji: '✈️', name: 'Travel', color: '#A8D8EA', textColor: '#0277BD' },
+  { emoji: '🎓', name: 'Education', color: '#FFB6B9', textColor: '#C2185B' },
+];
+
 const BudgetPage = () => {
   return (
     <div style={{ 
@@ -120,26 +150,16 @@ const BudgetPage = () => {
           </div>
         }
       >
-        <Cell
-          before={
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#61B5F7',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-            }}>
-              🍔
-            </div>
-          }
-        >
-          <Text weight="2" style={{ color: '#2E9DF4' }}>
-            Eating out
-          </Text>
-        </Cell>
+        {categories.map((category, index) => (
+          <Cell
+            key={index}
+            before={<CategoryCircle emoji={category.emoji} color={category.color} />}
+          >
+            <Text weight="2" style={{ color: category.textColor }}>
+              {category.name}
+            </Text>
+          </Cell>
+        ))}
       </Section>
     </div>
   );
