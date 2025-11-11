@@ -73,7 +73,7 @@ const StatsPage = () => {
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
-            padding: '0px 0px 0px 4px',
+            padding: '0px 0px 0px 6px',
           }}>
             -PLN
           </span>

@@ -29,8 +29,8 @@ const BudgetPage = () => {
       <Card style={{
         backgroundColor: 'var(--tgui--bg_color)',
         borderRadius: '12px',
-        margin: '0 15px 24px 15px',
-        padding: '16px',
+        margin: '0 0 24px 0',
+        padding: '40px 16px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -49,7 +49,7 @@ const BudgetPage = () => {
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
-            padding: '0px 0px 0px 4px',
+            padding: '0px 0px 0px 6px',
           }}>
             -PLN
           </span>
