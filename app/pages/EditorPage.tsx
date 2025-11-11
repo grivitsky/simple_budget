@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { IconButton } from '../../src/components/Blocks/IconButton/IconButton';
 import { Input } from '../../src/components/Form/Input/Input';
 import { Select } from '../../src/components/Form/Select/Select';
@@ -28,6 +28,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
   const [amount, setAmount] = useState('2,043.12');
   const [storeName, setStoreName] = useState('Biedronka');
   const [selectedCategory, setSelectedCategory] = useState('Eating Out');
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   // Handle amount input - allow only numbers, comma, and period
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +37,13 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
     if (/^[\d.,]*$/.test(value)) {
       setAmount(value);
     }
+  };
+
+  // Refocus amount input when name input loses focus
+  const handleNameBlur = () => {
+    setTimeout(() => {
+      amountInputRef.current?.focus();
+    }, 100);
   };
 
   return (
@@ -102,6 +110,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
             </span>
           </div>
           <input
+            ref={amountInputRef}
             type="text"
             inputMode="decimal"
             autoFocus
@@ -131,6 +140,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <Input
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
+          onBlur={handleNameBlur}
           style={{ width: '240px', textAlign: 'center' }}
         />
       </div>
