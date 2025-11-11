@@ -88,7 +88,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           justifyContent: 'center',
           gap: '4px',
         }}>
-          <div style={{ paddingBottom: '6px' }}>
+          <div style={{ paddingBottom: '6px'; marginRight: '-20px' }}>
             <span style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
               fontSize: '28px',
@@ -119,7 +119,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
               backgroundColor: 'transparent',
               width: `${(amount.length || 1) * 1}ch`,
               minWidth: '40px',
-              maxWidth: '300px',
+              maxWidth: '200px',
               padding: '0',
               textAlign: 'left',
             }}
