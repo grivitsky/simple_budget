@@ -142,7 +142,8 @@ const HomePage = () => {
         marginRight: '-16px',
         marginBottom: '-20px',
       }}>
-        {dailyTransactions.map((day, dayIndex) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {dailyTransactions.map((day, dayIndex) => (
           <Section
             key={dayIndex}
             header={
@@ -150,7 +151,7 @@ const HomePage = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '0px',
+                padding: '0px 16px',
                 marginBottom: '8px',
                 marginTop: dayIndex === 0 ? '16px' : '0px',
               }}>
@@ -201,7 +202,8 @@ const HomePage = () => {
               </Cell>
             ))}
           </Section>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
