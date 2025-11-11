@@ -90,8 +90,7 @@ const SettingsPage = () => {
             style={{
               backgroundColor: 'var(--tgui--bg_color)',
               borderRadius: '12px',
-              paddingLeft: '12px',
-              paddingRight: '12px',
+              padding: '4px 16px',
             }}
               before={
                 <IconContainer style={{
