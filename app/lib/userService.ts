@@ -7,6 +7,7 @@ import { supabase, User, UserInsert } from './supabase';
 export async function getOrCreateUser(telegramUser: any): Promise<User | null> {
   try {
     const telegramId = telegramUser.id;
+    console.log('🔍 Checking user with telegram_id:', telegramId);
 
     // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
@@ -17,15 +18,22 @@ export async function getOrCreateUser(telegramUser: any): Promise<User | null> {
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       // PGRST116 is "not found" error, which is expected for new users
-      console.error('Error fetching user:', fetchError);
+      console.error('❌ Error fetching user:', {
+        code: fetchError.code,
+        message: fetchError.message,
+        details: fetchError.details,
+        hint: fetchError.hint
+      });
       return null;
     }
 
     // If user exists, return it
     if (existingUser) {
-      console.log('Existing user found:', existingUser);
+      console.log('✅ Existing user found:', existingUser);
       return existingUser as User;
     }
+
+    console.log('👤 Creating new user...');
 
     // Create new user
     const newUser: UserInsert = {
@@ -39,6 +47,8 @@ export async function getOrCreateUser(telegramUser: any): Promise<User | null> {
       default_currency: 'PLN', // Default currency
     };
 
+    console.log('📝 User data to insert:', newUser);
+
     const { data: createdUser, error: createError } = await supabase
       .from('users')
       .insert([newUser])
@@ -46,14 +56,19 @@ export async function getOrCreateUser(telegramUser: any): Promise<User | null> {
       .single();
 
     if (createError) {
-      console.error('Error creating user:', createError);
+      console.error('❌ Error creating user:', {
+        code: createError.code,
+        message: createError.message,
+        details: createError.details,
+        hint: createError.hint
+      });
       return null;
     }
 
-    console.log('New user created:', createdUser);
+    console.log('✅ New user created:', createdUser);
     return createdUser as User;
   } catch (error) {
-    console.error('Unexpected error in getOrCreateUser:', error);
+    console.error('❌ Unexpected error in getOrCreateUser:', error);
     return null;
   }
 }
