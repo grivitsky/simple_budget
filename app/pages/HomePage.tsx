@@ -91,7 +91,6 @@ const HomePage = () => {
             letterSpacing: '-0.4px',
             color: 'var(--tgui--hint_color)',
             lineHeight: '1',
-            padding: '0px 0px 0px 4px',
           }}>
             -PLN
           </span>
