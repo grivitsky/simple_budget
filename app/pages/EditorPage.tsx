@@ -39,11 +39,29 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
     }
   };
 
-  // Refocus amount input when name input loses focus
-  const handleNameBlur = () => {
-    setTimeout(() => {
-      amountInputRef.current?.focus();
-    }, 100);
+  // Keep amount input focused by default
+  const handleAmountBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if focus is moving to name input or select
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    const isMovingToInput = relatedTarget?.tagName === 'INPUT' || relatedTarget?.tagName === 'SELECT';
+    
+    // If not moving to another input, refocus amount
+    if (!isMovingToInput) {
+      setTimeout(() => {
+        amountInputRef.current?.focus();
+      }, 0);
+    }
+  };
+  
+  // Refocus amount when name input loses focus
+  const handleNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Check if focus is moving to select
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (relatedTarget?.tagName !== 'SELECT') {
+      setTimeout(() => {
+        amountInputRef.current?.focus();
+      }, 0);
+    }
   };
 
   return (
@@ -95,7 +113,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           alignItems: 'flex-end',
           justifyContent: 'center',
           gap: '4px',
-          marginRight: '-20px',
+          marginRight: '-32px',
         }}>
           <div style={{ paddingBottom: '6px' }}>
             <span style={{
@@ -116,6 +134,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
             autoFocus
             value={amount}
             onChange={handleAmountChange}
+            onBlur={handleAmountBlur}
             size={amount.length || 1}
             style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
