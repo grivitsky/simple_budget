@@ -16,8 +16,8 @@ Run the SQL from `schema.sql` in your Supabase SQL Editor:
 This will create:
 - `users` table with all necessary fields
 - Indexes for performance
-- Row Level Security policies
-- Auto-update triggers for `updated_at`
+- `updated_at` auto-update trigger
+- RLS disabled (required for direct client access)
 
 ## 3. Configure Environment Variables
 
@@ -32,13 +32,16 @@ Replace with your actual Supabase project URL and anon key.
 
 ## 4. Row Level Security (RLS)
 
-The schema includes RLS policies. For development, you might want to temporarily disable RLS:
+RLS is **disabled by default** because the Telegram Mini App talks directly to Supabase using the `anon` key.
+
+If you want tighter security in the future:
+1. Build a backend service (e.g. Next.js API route) that uses the Supabase service role key
+2. Re-enable RLS and create appropriate policies
 
 ```sql
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+-- Add your policies here
 ```
-
-For production, keep RLS enabled and configure policies as needed.
 
 ## 5. Users Table Schema
 

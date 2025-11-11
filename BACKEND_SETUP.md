@@ -64,13 +64,13 @@ This creates:
 
 ## Step 5: Configure Row Level Security (Optional for Development)
 
-For **development/testing**, you might want to disable RLS temporarily:
+RLS is disabled by default in our schema so the Telegram Mini App can talk directly to Supabase.  
+When you're ready to harden security, you can:
 
 ```sql
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+-- add RLS policies
 ```
-
-For **production**, keep RLS enabled (default).
 
 ## Step 6: Test the Setup
 
@@ -138,7 +138,7 @@ npm run dev
   1. Environment variables are correctly set
   2. Supabase project is active
   3. Schema was created successfully
-  4. RLS policies allow operations (or disable RLS for dev)
+  4. RLS is currently disabled (expected)
 
 ### Check Database Directly
 
