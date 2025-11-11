@@ -139,7 +139,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
       <Select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        style={{ paddingTop: '14px', paddingBottom: '14px', width: '240px', textAlign: 'center' }}
+        style={{ paddingTop: '12px', paddingBottom: '14px', width: '240px', textAlign: 'center' }}
       >
         {categories.map((category) => (
           <option key={category.name} value={category.name}>
