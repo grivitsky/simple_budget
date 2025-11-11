@@ -82,7 +82,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '12px',
+        gap: '6px',
       }}>
         {/* Amount Input */}
         <div style={{
