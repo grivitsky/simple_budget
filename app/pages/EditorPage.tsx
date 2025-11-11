@@ -47,19 +47,19 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
         <IconButton
           mode="bezeled"
           size="s"
-          style={{
-            color: 'var(--tgui--destructive_text_color)',
-            backgroundColor: 'var(--tgui--destructive_background)',
-          }}
+          onClick={onClose}
         >
-          <Icon28Bin />
+          <Icon28Check />
         </IconButton>
         <IconButton
           mode="bezeled"
           size="s"
-          onClick={onClose}
+          style={{
+            color: '#FF383C',
+            backgroundColor: 'rgba(255, 56, 60, 0.14)',
+          }}
         >
-          <Icon28Check />
+          <Icon28Bin />
         </IconButton>
       </div>
 
@@ -90,16 +90,26 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
               -PLN
             </span>
           </div>
-          <span style={{
-            fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
-            fontSize: '44px',
-            fontWeight: '700',
-            letterSpacing: '-0.4px',
-            color: 'var(--tgui--text_color)',
-            lineHeight: '1',
-          }}>
-            {amount}
-          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            autoFocus
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            style={{
+              fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
+              fontSize: '44px',
+              fontWeight: '700',
+              letterSpacing: '-0.4px',
+              color: 'var(--tgui--text_color)',
+              lineHeight: '1',
+              border: 'none',
+              outline: 'none',
+              backgroundColor: 'transparent',
+              width: '200px',
+              padding: '0',
+            }}
+          />
         </div>
 
         {/* Store Name Input */}
@@ -114,6 +124,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
       <Select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
+        style={{ paddingTop: '4px', paddingBottom: '4px' }}
       >
         {categories.map((category) => (
           <option key={category.name} value={category.name}>
