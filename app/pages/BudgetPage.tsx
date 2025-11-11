@@ -159,7 +159,7 @@ const BudgetPage = () => {
         </div>
 
         {/* Categories List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {categories.map((category, index) => (
             <Cell
               key={index}
