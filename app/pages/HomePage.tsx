@@ -147,10 +147,6 @@ const HomePage = () => {
           {dailyTransactions.map((day, dayIndex) => (
           <Section
             key={dayIndex}
-            style={{
-              paddingTop: '8px',
-              paddingBottom: '8px',
-            }}
             header={
               <div style={{
                 display: 'flex',
