@@ -135,6 +135,7 @@ const BudgetPage = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '20px',
+          padding: '0px 16px',
         }}>
           <span style={{
             fontSize: '13px',
