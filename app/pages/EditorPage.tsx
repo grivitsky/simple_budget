@@ -90,7 +90,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           alignItems: 'flex-end',
           justifyContent: 'center',
           gap: '4px',
-          marginRight: '-20px',
+          marginRight: '-24px',
         }}>
           <div style={{ paddingBottom: '6px' }}>
             <span style={{
