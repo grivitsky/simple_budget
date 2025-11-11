@@ -88,7 +88,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
           justifyContent: 'center',
           gap: '4px',
         }}>
-          <div style={{ paddingBottom: '2px' }}>
+          <div style={{ paddingBottom: '6px' }}>
             <span style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
               fontSize: '28px',
@@ -106,6 +106,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
             autoFocus
             value={amount}
             onChange={handleAmountChange}
+            size={amount.length || 1}
             style={{
               fontFamily: '"SF Pro Rounded", "SF Rounded", -apple-system, BlinkMacSystemFont, sans-serif',
               fontSize: '44px',
@@ -116,8 +117,7 @@ const EditorPage = ({ onClose }: EditorPageProps) => {
               border: 'none',
               outline: 'none',
               backgroundColor: 'transparent',
-              width: 'auto',
-              minWidth: '100px',
+              width: `${(amount.length || 1) * 0.6}ch`,
               maxWidth: '300px',
               padding: '0',
             }}
