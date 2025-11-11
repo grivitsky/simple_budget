@@ -15,7 +15,7 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '16px',
+    fontSize: '14px',
   }}>
     {emoji}
   </div>
@@ -127,7 +127,7 @@ const BudgetPage = () => {
         padding: '16px',
         marginLeft: '-16px',
         marginRight: '-16px',
-        marginBottom: '-16px',
+        marginBottom: '-20px',
       }}>
         {/* Section Header */}
         <div style={{
@@ -159,7 +159,7 @@ const BudgetPage = () => {
         </div>
 
         {/* Categories List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {categories.map((category, index) => (
             <Cell
               key={index}
