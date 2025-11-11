@@ -127,6 +127,7 @@ const BudgetPage = () => {
         padding: '16px',
         marginLeft: '-16px',
         marginRight: '-16px',
+        marginBottom: '-16px',
       }}>
         {/* Section Header */}
         <div style={{
@@ -165,7 +166,7 @@ const BudgetPage = () => {
               style={{
                 backgroundColor: `${category.color}33`, // 20% opacity
                 borderRadius: '16px',
-                padding: '4px 16px',
+                padding: '6px 16px',
               }}
               before={<CategoryCircle emoji={category.emoji} color={category.color} />}
             >
