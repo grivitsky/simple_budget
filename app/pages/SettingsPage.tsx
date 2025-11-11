@@ -189,7 +189,7 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
                           flexShrink: 0,
                         }}
                       >
-                        {currency.symbol}
+                        {currency.code}
                       </Text>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <Text 
@@ -197,14 +197,6 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
                           style={{ color: 'var(--tgui--text_color)' }}
                         >
                           {currency.name}
-                        </Text>
-                        <Text 
-                          style={{ 
-                            color: 'var(--tgui--hint_color)',
-                            fontSize: '13px',
-                          }}
-                        >
-                          {currency.code}
                         </Text>
                       </div>
                     </div>
