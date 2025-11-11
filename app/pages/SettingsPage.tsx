@@ -106,6 +106,7 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
           style={{ 
             marginTop: '16px',
             color: 'var(--tgui--text_color)',
+            fontSize: '24px',
           }}
         >
           {getUserName()}
@@ -115,6 +116,7 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
           style={{ 
             marginTop: '4px',
             color: 'var(--tgui--hint_color)',
+            fontSize: '16px',
           }}
         >
           Settings
