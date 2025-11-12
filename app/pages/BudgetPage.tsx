@@ -307,7 +307,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
 
           {/* Categories List Skeleton */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[1, 2, 3, 4, 5].map((index) => {
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => {
               const delay = 0.32 + (index - 1) * 0.06;
               return (
                 <div

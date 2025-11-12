@@ -430,6 +430,8 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
       backgroundColor: 'var(--tgui--secondary_bg_color)',
       minHeight: '100vh',
       padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* Section 1: Period and Amount Header */}
       <div style={{
@@ -511,9 +513,16 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
         marginLeft: '-16px',
         marginRight: '-16px',
         marginBottom: '-20px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {dailyTransactions.length === 0 ? (
           <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             padding: '40px 16px',
             textAlign: 'center',
             color: 'var(--tgui--hint_color)',
