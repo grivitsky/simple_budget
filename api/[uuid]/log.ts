@@ -122,8 +122,7 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
             content: openaiPrompt,
           },
         ],
-        temperature: 0.3, // Lower temperature for more consistent formatting
-        max_tokens: 100,
+        max_completion_tokens: 100,
       }),
     });
 
