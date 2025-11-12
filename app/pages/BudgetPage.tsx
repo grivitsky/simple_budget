@@ -313,7 +313,6 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
           alignItems: 'center',
           marginBottom: '20px',
           padding: '0px 12px',
-          minHeight: '100%',
         }}>
           <span style={{
             fontSize: '13px',

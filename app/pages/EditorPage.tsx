@@ -293,7 +293,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
         <Select
           value={selectedCategoryId || ''}
           onChange={(e) => setSelectedCategoryId(e.target.value || null)}
-          style={{ paddingTop: '14px', paddingBottom: '14px', width: '272px' }}
+          style={{ paddingTop: '14px', paddingBottom: '14px' }}
         >
           {categories.map((category) => (
             <option key={category.id} value={category.id}>

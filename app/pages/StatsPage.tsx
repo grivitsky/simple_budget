@@ -12,7 +12,7 @@ import { Subheadline } from '../../src/components/Typography/Subheadline/Subhead
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
-import { getCategoryColor, getCategoryTextColor, isDarkTheme } from '../lib/themeUtils';
+import { getCategoryColor, getCategoryTextColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
 // Category Circle Component
@@ -695,9 +695,7 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
                     <Cell
                       key={transactionIndex}
                       style={{
-                        backgroundColor: isDarkTheme() 
-                          ? 'var(--tgui--bg_color)' 
-                          : 'var(--tgui--secondary_bg_color)',
+                        backgroundColor: 'var(--tgui--secondary_bg_color)',
                       }}
                       before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
                       subtitle={
