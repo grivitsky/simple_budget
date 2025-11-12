@@ -312,7 +312,6 @@ export const MOTIVATIONAL_QUOTES = [
   "Receipts bowed to your order, {name}.",
   "You pressed 'track' and chaos pressed 'quit,' {name}.",
   "Streak protected, {name}. Algorithms of wealth smiling.",
-  "You’re compounding swagger and savings, {name}.",
   "Numbers neat, nerves neat, {name}.",
   "You piloted the wallet like a pro, {name}—no turbulence.",
   "That’s a vote for calm cash flow, {name}.",
