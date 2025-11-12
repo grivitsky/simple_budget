@@ -32,12 +32,14 @@ const Skeleton = ({
   width, 
   height, 
   borderRadius = '4px',
-  style 
+  style,
+  delay = 0
 }: { 
   width?: string | number; 
   height?: string | number; 
   borderRadius?: string;
   style?: React.CSSProperties;
+  delay?: number;
 }) => {
   const skeletonStyle: React.CSSProperties = {
     width: width || '100%',
@@ -57,6 +59,7 @@ const Skeleton = ({
     height: '100%',
     background: 'linear-gradient(90deg, transparent, rgba(128, 128, 128, 0.2), transparent)',
     animation: 'shimmer 1.5s infinite',
+    animationDelay: `${delay}s`,
   };
 
   return (
@@ -322,7 +325,7 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
           padding: '32px 0px 24px 0px',
         }}>
           {/* Period Label Skeleton */}
-          <Skeleton width="120px" height="20px" borderRadius="4px" style={{ marginBottom: '4px' }} />
+          <Skeleton width="120px" height="20px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={0} />
           
           {/* Amount with Currency Skeleton */}
           <div style={{
@@ -331,9 +334,9 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             gap: '4px',
           }}>
             <div style={{ paddingBottom: '2px' }}>
-              <Skeleton width="60px" height="28px" borderRadius="4px" />
+              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.1} />
             </div>
-            <Skeleton width="140px" height="44px" borderRadius="4px" />
+            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.2} />
           </div>
         </div>
 
@@ -344,9 +347,9 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             gap: '8px',
             justifyContent: 'center',
           }}>
-            <Skeleton width="60px" height="36px" borderRadius="8px" />
-            <Skeleton width="60px" height="36px" borderRadius="8px" />
-            <Skeleton width="60px" height="36px" borderRadius="8px" />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.3} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.4} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.5} />
           </div>
         </div>
 
@@ -364,53 +367,59 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
           marginTop: '16px',
         }}>
           {/* Day Section Skeleton */}
-          {[1, 2, 3].map((dayIndex) => (
-            <div key={dayIndex} style={{ marginBottom: dayIndex < 3 ? '16px' : '0' }}>
-              {/* Day Header Skeleton */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0px 16px',
-                marginBottom: '8px',
-                marginTop: dayIndex === 1 ? '16px' : '0px',
-              }}>
-                <Skeleton width="100px" height="13px" borderRadius="4px" />
-                <Skeleton width="80px" height="20px" borderRadius="4px" />
-              </div>
-              
-              {/* Transaction Cells Skeleton */}
-              {[1, 2].map((transactionIndex) => (
-                <div
-                  key={transactionIndex}
-                  style={{
-                    backgroundColor: 'var(--tgui--secondary_bg_color)',
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    marginBottom: transactionIndex < 2 ? '8px' : '0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                  }}
-                >
-                  {/* Circle Skeleton */}
-                  <Skeleton width="48px" height="48px" borderRadius="50%" />
-                  
-                  {/* Content Skeleton */}
-                  <div style={{ flex: 1 }}>
-                    <Skeleton width="60%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} />
-                    <Skeleton width="40%" height="14px" borderRadius="4px" />
-                  </div>
-                  
-                  {/* Amount Skeleton */}
-                  <div style={{ textAlign: 'right' }}>
-                    <Skeleton width="70px" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} />
-                    <Skeleton width="50px" height="14px" borderRadius="4px" />
-                  </div>
+          {[1, 2, 3].map((dayIndex) => {
+            const baseDelay = 0.6 + (dayIndex - 1) * 0.4;
+            return (
+              <div key={dayIndex} style={{ marginBottom: dayIndex < 3 ? '16px' : '0' }}>
+                {/* Day Header Skeleton */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0px 16px',
+                  marginBottom: '8px',
+                  marginTop: dayIndex === 1 ? '16px' : '0px',
+                }}>
+                  <Skeleton width="100px" height="13px" borderRadius="4px" delay={baseDelay} />
+                  <Skeleton width="80px" height="20px" borderRadius="4px" delay={baseDelay + 0.1} />
                 </div>
-              ))}
-            </div>
-          ))}
+                
+                {/* Transaction Cells Skeleton */}
+                {[1, 2].map((transactionIndex) => {
+                  const transactionDelay = baseDelay + 0.2 + (transactionIndex - 1) * 0.15;
+                  return (
+                    <div
+                      key={transactionIndex}
+                      style={{
+                        backgroundColor: 'var(--tgui--secondary_bg_color)',
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        marginBottom: transactionIndex < 2 ? '8px' : '0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                      }}
+                    >
+                      {/* Circle Skeleton */}
+                      <Skeleton width="48px" height="48px" borderRadius="50%" delay={transactionDelay} />
+                      
+                      {/* Content Skeleton */}
+                      <div style={{ flex: 1 }}>
+                        <Skeleton width="60%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.05} />
+                        <Skeleton width="40%" height="14px" borderRadius="4px" delay={transactionDelay + 0.1} />
+                      </div>
+                      
+                      {/* Amount Skeleton */}
+                      <div style={{ textAlign: 'right' }}>
+                        <Skeleton width="70px" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.05} />
+                        <Skeleton width="50px" height="14px" borderRadius="4px" delay={transactionDelay + 0.1} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
