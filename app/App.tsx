@@ -81,8 +81,10 @@ const tabs = [
 function App() {
   const [currentTab, setCurrentTab] = useState<TabId>('home');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorSpendingId, setEditorSpendingId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     // Initialize Telegram Web App and authenticate user
@@ -174,7 +176,22 @@ function App() {
     return (
       <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
         <div className="page-container">
-          <EditorPage onClose={() => setIsEditorOpen(false)} />
+          <EditorPage 
+            onClose={() => {
+              setIsEditorOpen(false);
+              setEditorSpendingId(null);
+            }}
+            spendingId={editorSpendingId}
+            user={user}
+            onSave={() => {
+              // Trigger refresh of HomePage data
+              setRefreshTrigger(prev => prev + 1);
+            }}
+            onDelete={() => {
+              // Trigger refresh of HomePage data
+              setRefreshTrigger(prev => prev + 1);
+            }}
+          />
         </div>
       </AppRoot>
     );
@@ -190,9 +207,13 @@ function App() {
       <div className="page-container">
         {needsUser ? (
           <CurrentPage 
-            onOpenEditor={() => setIsEditorOpen(true)} 
+            onOpenEditor={(spendingId?: string) => {
+              setEditorSpendingId(spendingId || null);
+              setIsEditorOpen(true);
+            }} 
             user={user}
             onUserUpdate={handleUserUpdate}
+            refreshTrigger={refreshTrigger}
           />
         ) : (
           <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} />

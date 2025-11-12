@@ -290,3 +290,85 @@ export function getPeriodEndDate(): Date {
   return new Date();
 }
 
+/**
+ * Update a spending entry
+ */
+export async function updateSpending(
+  spendingId: string,
+  updates: {
+    spending_name?: string;
+    spending_amount?: number;
+    currency_code?: string;
+    category_id?: string | null;
+    exchange_rate?: number;
+    amount_in_base_currency?: number;
+  }
+): Promise<Spending | null> {
+  try {
+    const { data, error } = await supabase
+      .from('spendings')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', spendingId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating spending:', error);
+      return null;
+    }
+
+    return data as Spending;
+  } catch (error) {
+    console.error('Unexpected error in updateSpending:', error);
+    return null;
+  }
+}
+
+/**
+ * Delete a spending entry
+ */
+export async function deleteSpending(spendingId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('spendings')
+      .delete()
+      .eq('id', spendingId);
+
+    if (error) {
+      console.error('Error deleting spending:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error in deleteSpending:', error);
+    return false;
+  }
+}
+
+/**
+ * Get spending by ID
+ */
+export async function getSpendingById(spendingId: string): Promise<Spending | null> {
+  try {
+    const { data, error } = await supabase
+      .from('spendings')
+      .select('*')
+      .eq('id', spendingId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching spending:', error);
+      return null;
+    }
+
+    return data as Spending;
+  } catch (error) {
+    console.error('Unexpected error in getSpendingById:', error);
+    return null;
+  }
+}
+

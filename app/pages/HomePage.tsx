@@ -72,8 +72,9 @@ async function convertToUserCurrency(
 }
 
 interface HomePageProps {
-  onOpenEditor?: () => void;
+  onOpenEditor?: (spendingId: string) => void;
   user?: User | null;
+  refreshTrigger?: number;
 }
 
 interface DailyTransaction {
@@ -90,7 +91,7 @@ interface DailyTransaction {
   }>;
 }
 
-const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
+const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [spendings, setSpendings] = useState<Spending[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -137,7 +138,7 @@ const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
     };
 
     fetchData();
-  }, [selectedPeriod, user]);
+  }, [selectedPeriod, user, refreshTrigger]);
 
   // Process spendings into daily transactions
   const processDailyTransactions = async (): Promise<DailyTransaction[]> => {
@@ -410,7 +411,7 @@ const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
             {day.transactions.map((transaction, transactionIndex) => (
               <Cell
                 key={transactionIndex}
-                onClick={onOpenEditor}
+                onClick={() => onOpenEditor?.(transaction.id)}
                 before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
                 subtitle={
                   <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
