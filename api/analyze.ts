@@ -249,7 +249,7 @@ Now generate the analysis message following all the rules above.`;
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-5',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000,
         temperature: 0.7,
