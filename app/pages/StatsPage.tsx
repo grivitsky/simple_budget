@@ -28,17 +28,27 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
 );
 
 /**
- * Format date as "Month YYYY" (e.g., "November 2025")
+ * Format date as "Month YYYY" (e.g., "November 2025") or "DD Mon - DD Mon" for week
  */
 function formatPeriodDate(period: 'week' | 'month' | 'year'): string {
   const now = new Date();
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 
                   'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
   switch (period) {
     case 'week': {
       const start = getPeriodStartDate('week');
-      return `${months[start.getMonth()]} ${start.getFullYear()}`;
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6); // Week ends 6 days after start
+      
+      const startDay = start.getDate().toString().padStart(2, '0');
+      const startMonth = monthAbbr[start.getMonth()];
+      const endDay = end.getDate().toString().padStart(2, '0');
+      const endMonth = monthAbbr[end.getMonth()];
+      
+      return `${startDay} ${startMonth} - ${endDay} ${endMonth}`;
     }
     case 'month': {
       return `${months[now.getMonth()]} ${now.getFullYear()}`;
@@ -96,6 +106,9 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [userCurrency, setUserCurrency] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
+  const [spendingsData, setSpendingsData] = useState<Spending[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
 
   // Fetch spendings and calculate statistics when period or user changes
   useEffect(() => {
@@ -109,6 +122,7 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
       try {
         // Fetch categories
         const cats = await getAllCategories();
+        setCategories(cats);
 
         // Get user's default currency
         const defaultCurrency = user.default_currency || 'USD';
@@ -120,6 +134,7 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
 
         // Fetch spendings for period
         const spendingsData = await getUserSpendingsByDateRange(user.id, startDate, endDate);
+        setSpendingsData(spendingsData);
 
         // Get user's currency exchange rate
         const userCurrencyData = await getCurrencyByCode(defaultCurrency);
@@ -185,6 +200,93 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
 
     fetchData();
   }, [selectedPeriod, user, refreshTrigger]);
+
+  // Handle Analyze button click
+  const handleAnalyze = async () => {
+    if (!user || spendingsData.length === 0 || categoryStats.length === 0) {
+      alert('No data available for analysis');
+      return;
+    }
+
+    setAnalyzing(true);
+    try {
+      // Get user's currency exchange rate
+      const userCurrencyData = await getCurrencyByCode(userCurrency);
+      const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+
+      // Format transactions for OpenAI
+      const transactions = await Promise.all(
+        spendingsData.map(async (spending) => {
+          // Convert to user's currency
+          const convertedAmount = await convertToUserCurrency(
+            spending,
+            userCurrency,
+            userCurrencyRate
+          );
+
+          // Get category name
+          const category = categories.find(cat => cat.id === spending.category_id) ||
+                          categories.find(cat => cat.name === 'Undefined');
+
+          // Format date as YYYY-MM-DD
+          const date = new Date(spending.created_at);
+          const dateStr = date.toISOString().split('T')[0];
+
+          return {
+            date: dateStr,
+            amount: -Math.abs(convertedAmount), // Negative for spending
+            currency: userCurrency,
+            category: category?.name || 'Undefined',
+            merchant: spending.spending_name,
+            notes: undefined,
+            is_recurring: false, // We don't track this yet
+          };
+        })
+      );
+
+      // Format category stats
+      const categoryTotals = categoryStats.map(stat => ({
+        category: stat.categoryName,
+        total: stat.amount,
+        percentage: stat.percentage,
+      }));
+
+      // Get date range string
+      const dateRange = formatPeriodDate(selectedPeriod);
+
+      // Call analyze API
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactions,
+          categoryStats: categoryTotals,
+          totalSpent: totalAmount,
+          period: selectedPeriod,
+          dateRange,
+          userTelegramId: user.telegram_id,
+          userCurrency,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate analysis');
+      }
+
+      await response.json();
+      
+      // Show success message
+      alert('Analysis sent to your Telegram chat! 📊');
+    } catch (error) {
+      console.error('Error analyzing:', error);
+      alert('Failed to generate analysis. Please try again.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -261,8 +363,10 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
         stretched
         before={<Icon24Guard />}
         style={{ marginBottom: '24px' }}
+        onClick={handleAnalyze}
+        disabled={analyzing || spendingsData.length === 0}
       >
-        Analyze
+        {analyzing ? 'Analyzing...' : 'Analyze'}
       </Button>
 
       {/* 2. Period Tabs */}
