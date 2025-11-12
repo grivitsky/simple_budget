@@ -340,6 +340,8 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
       backgroundColor: 'var(--tgui--secondary_bg_color)',
       minHeight: '100vh',
       padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* Section 1: Header with Title and Button */}
       <div style={{
@@ -446,6 +448,9 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         marginLeft: '-16px',
         marginRight: '-16px',
         marginBottom: '-20px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {/* Section Header */}
         <div style={{
@@ -503,6 +508,10 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
           </div>
         ) : (
           <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             padding: '20px',
             textAlign: 'center',
             color: 'var(--tgui--hint_color)',
