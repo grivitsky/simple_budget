@@ -113,7 +113,7 @@ export function parseSpendingMessage(message: string): {
   // No match found
   console.log('❌ No pattern matched for:', trimmed);
   return { amount: null, currency: null, spendingName: null };
-
+}
 
 /**
  * Create a spending entry from a Telegram message
