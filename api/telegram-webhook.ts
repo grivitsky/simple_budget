@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getOrCreateUser } from '../bot/lib/userService';
 import { createSpendingFromMessage } from '../bot/lib/spendingService';
+import { formatSpendingConfirmation } from '../bot/lib/quotes';
 
 interface TelegramUpdate {
   update_id: number;
@@ -84,9 +85,19 @@ export default async function handler(
       if (spending) {
         // Send success response to user via Telegram Bot API
         const chatId = update.message.chat.id;
-        const responseText = `✅ Logged: ${spending.spending_amount} ${spending.currency_code} - ${spending.spending_name}`;
         
-        // Send confirmation message (optional - you can remove this if not needed)
+        // Get user's display name for personalized quote
+        const userName = user.first_name || user.username || 'there';
+        
+        // Format confirmation message with quote
+        const responseText = formatSpendingConfirmation(
+          spending.spending_amount,
+          spending.currency_code,
+          spending.spending_name,
+          userName
+        );
+        
+        // Send confirmation message
         try {
           await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',

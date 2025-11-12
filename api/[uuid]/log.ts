@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getUserById } from '../../bot/lib/userService';
 import { createSpendingFromMessage } from '../../bot/lib/spendingService';
+import { formatSpendingConfirmation } from '../../bot/lib/quotes';
 
 /**
  * API endpoint for logging spendings via iPhone shortcuts
@@ -149,9 +150,20 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     const spending = await createSpendingFromMessage(user, extractedMessage);
 
     if (spending) {
+      // Get user's display name for personalized quote
+      const userName = user.first_name || user.username || 'there';
+      
+      // Format confirmation message with quote
+      const confirmationMessage = formatSpendingConfirmation(
+        spending.spending_amount,
+        spending.currency_code,
+        spending.spending_name,
+        userName
+      );
+      
       return res.status(200).json({
         success: true,
-        message: 'Spending logged successfully',
+        message: confirmationMessage,
         spending: {
           id: spending.id,
           amount: spending.spending_amount,
