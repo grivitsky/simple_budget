@@ -77,6 +77,44 @@ export default async function handler(
         return res.status(500).json({ error: 'User authentication failed' });
       }
 
+      // Handle /start command
+      if (messageText === '/start') {
+        const chatId = update.message.chat.id;
+        const userName = user.first_name || user.username || 'there';
+        const welcomeMessage = `👋 Welcome to *Frugalista - Budget Tracking*, ${userName}!
+
+I help you track your expenses quickly and easily. Just send me your transactions in one of these formats:
+
+• \`10.12 $ Food\`
+• \`10.12 USD Food\`
+• \`10.12 Food\` (uses your default currency)
+
+I'll automatically log your spending and send you a confirmation with a motivational quote! 💪
+
+You can also:
+• View your transactions in the Mini App
+• Organize transactions by category
+• See spending statistics and insights
+
+Ready to start tracking? Just send me a transaction! 📊`;
+
+        try {
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: welcomeMessage,
+              parse_mode: 'Markdown',
+            }),
+          });
+        } catch (error) {
+          console.error('Error sending welcome message:', error);
+        }
+
+        return res.status(200).json({ ok: true, message: 'Welcome message sent' });
+      }
+
       // Create spending from message
       console.log('📨 Processing message:', messageText);
       const spending = await createSpendingFromMessage(user, messageText);
