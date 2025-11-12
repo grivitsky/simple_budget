@@ -104,6 +104,11 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
       });
 
       if (updated) {
+        // Haptic feedback for success
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+        
         if (onSave) {
           onSave();
         }
