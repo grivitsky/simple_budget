@@ -46,9 +46,22 @@ After deployment, note your Vercel project URL.
 
 ## Step 4: Set Telegram Webhook
 
-After deployment, configure Telegram to send updates to your webhook:
+After deployment, configure Telegram to send updates to your webhook. You can use either the root URL or the specific endpoint:
 
-### Option A: Using curl
+### Option A: Using Root URL (Recommended)
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-project.vercel.app"}'
+```
+
+Or visit in browser:
+```
+https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-project.vercel.app
+```
+
+### Option B: Using Specific Endpoint
 
 ```bash
 curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
@@ -56,12 +69,12 @@ curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
   -d '{"url": "https://your-project.vercel.app/api/telegram-webhook"}'
 ```
 
-### Option B: Using Browser
-
-Visit this URL (replace with your values):
+Or visit in browser:
 ```
 https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://your-project.vercel.app/api/telegram-webhook
 ```
+
+**Note**: Both URLs work! The root URL automatically routes POST requests to the webhook handler.
 
 ### Option C: Verify Webhook
 

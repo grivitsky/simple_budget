@@ -7,6 +7,17 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/telegram-webhook",
+      "dest": "/api/telegram-webhook.ts"
+    },
+    {
+      "src": "/",
+      "methods": ["POST"],
+      "dest": "/api/telegram-webhook.ts"
+    }
   ]
 }
 
