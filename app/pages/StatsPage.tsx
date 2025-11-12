@@ -9,6 +9,7 @@ import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
+import { getCategoryColor, getCategoryTextColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
 // Category Circle Component
@@ -182,8 +183,8 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
             categoryId: category.id,
             categoryName: category.name,
             emoji: category.emoji,
-            color: category.color,
-            textColor: category.text_color,
+            color: getCategoryColor(category),
+            textColor: getCategoryTextColor(category),
             amount: catTotal,
             percentage: total > 0 ? (catTotal / total) * 100 : 0,
             timestamp: timestamp,

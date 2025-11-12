@@ -9,6 +9,7 @@ import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendings, updateSpending, type Spending } from '../lib/spendingService';
 import { getAllCategories, getUndefinedCategory, type Category } from '../lib/categoryService';
 import { getCurrencyByCode } from '../lib/currencyService';
+import { getCategoryColor, getCategoryTextColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
 // Category Circle Component
@@ -339,22 +340,26 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         {/* Categories List */}
         {currentSpending ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {displayCategories.map((category) => (
-              <Cell
-                key={category.id}
-                onClick={() => handleCategorySelect(category.id)}
-                style={{
-                  backgroundColor: `${category.color}33`, // 20% opacity
-                  borderRadius: '16px',
-                  padding: '6px 16px',
-                }}
-                before={<CategoryCircle emoji={category.emoji} color={category.color} />}
-              >
-                <Text weight="3" style={{ color: category.text_color }}>
-                  {category.name}
-                </Text>
-              </Cell>
-            ))}
+            {displayCategories.map((category) => {
+              const categoryColor = getCategoryColor(category);
+              const categoryTextColor = getCategoryTextColor(category);
+              return (
+                <Cell
+                  key={category.id}
+                  onClick={() => handleCategorySelect(category.id)}
+                  style={{
+                    backgroundColor: `${categoryColor}33`, // 20% opacity
+                    borderRadius: '16px',
+                    padding: '6px 16px',
+                  }}
+                  before={<CategoryCircle emoji={category.emoji} color={categoryColor} />}
+                >
+                  <Text weight="3" style={{ color: categoryTextColor }}>
+                    {category.name}
+                  </Text>
+                </Cell>
+              );
+            })}
           </div>
         ) : (
           <div style={{

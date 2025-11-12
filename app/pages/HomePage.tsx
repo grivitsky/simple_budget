@@ -9,6 +9,7 @@ import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
+import { getCategoryColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
 // Transaction Circle Component
@@ -190,7 +191,7 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             time: formatTime(new Date(spending.created_at)),
             amount: convertedAmount,
             type: 'Spent',
-            color: category?.color || '#9E9E9E',
+            color: category ? getCategoryColor(category) : '#9E9E9E',
           };
         })
       );
