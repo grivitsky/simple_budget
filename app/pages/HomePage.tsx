@@ -25,7 +25,7 @@ const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) =
 // Daily transactions data
 const dailyTransactions = [
   {
-    date: 'Tue, 4 NOV',
+    date: 'Tue, 5 NOV',
     total: '-100.88 PLN',
     transactions: [
       { emoji: '🍔', name: 'McDonalds', time: '12:00 AM', amount: '-30.32 PLN', type: 'Spent', color: '#61B5F7' },
