@@ -27,7 +27,12 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // Only allow POST requests
+  // Handle GET requests (for webhook verification)
+  if (req.method === 'GET') {
+    return res.status(200).json({ ok: true, message: 'Webhook endpoint is active' });
+  }
+
+  // Only allow POST requests for actual webhook updates
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
