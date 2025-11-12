@@ -136,11 +136,38 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     }
 
     const openaiData = await openaiResponse.json();
-    const extractedMessage = openaiData.choices?.[0]?.message?.content?.trim();
+    console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
+    
+    // Handle different response structures from GPT-5 models
+    let extractedMessage: string | null = null;
+    
+    if (openaiData.choices && openaiData.choices.length > 0) {
+      const choice = openaiData.choices[0];
+      // Check for different possible response formats
+      if (choice.message?.content) {
+        extractedMessage = choice.message.content.trim();
+      } else if (choice.text) {
+        extractedMessage = choice.text.trim();
+      } else if (choice.content) {
+        extractedMessage = choice.content.trim();
+      } else if (typeof choice === 'string') {
+        extractedMessage = choice.trim();
+      }
+    } else if (openaiData.content) {
+      extractedMessage = openaiData.content.trim();
+    } else if (openaiData.text) {
+      extractedMessage = openaiData.text.trim();
+    } else if (typeof openaiData === 'string') {
+      extractedMessage = openaiData.trim();
+    }
 
-    if (!extractedMessage) {
-      console.error('No content from OpenAI response:', openaiData);
-      return res.status(502).json({ error: 'AI did not return a valid transaction' });
+    if (!extractedMessage || extractedMessage.length === 0) {
+      console.error('❌ No content from OpenAI response. Full response:', JSON.stringify(openaiData, null, 2));
+      return res.status(502).json({ 
+        error: 'AI did not return a valid transaction',
+        details: 'OpenAI response did not contain extractable content',
+        response_structure: Object.keys(openaiData),
+      });
     }
 
     console.log('✅ OpenAI extracted:', extractedMessage);
