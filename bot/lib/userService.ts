@@ -95,3 +95,26 @@ export async function getUserByTelegramId(telegramId: number): Promise<User | nu
   }
 }
 
+/**
+ * Get user by UUID
+ */
+export async function getUserById(userId: string): Promise<User | null> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user by ID:', error);
+      return null;
+    }
+
+    return data as User;
+  } catch (error) {
+    console.error('Unexpected error in getUserById:', error);
+    return null;
+  }
+}
+
