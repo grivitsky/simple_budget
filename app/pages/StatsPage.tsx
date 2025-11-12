@@ -6,6 +6,9 @@ import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
 import { Divider } from '../../src/components/Misc/Divider/Divider';
 import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
+import { Modal } from '../../src/components/Overlays/Modal/Modal';
+import { Section } from '../../src/components/Blocks/Section/Section';
+import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
@@ -23,6 +26,22 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: '16px',
+  }}>
+    {emoji}
+  </div>
+);
+
+// Transaction Circle Component (for modal)
+const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) => (
+  <div style={{
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    backgroundColor: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
   }}>
     {emoji}
   </div>
@@ -68,6 +87,30 @@ function formatNumber(num: number): string {
 }
 
 /**
+ * Format date as "Day, DD MON" (e.g., "Tue, 5 NOV")
+ */
+function formatDate(date: Date): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const day = days[date.getDay()];
+  const dayNum = date.getDate();
+  const month = months[date.getMonth()];
+  return `${day}, ${dayNum} ${month}`;
+}
+
+/**
+ * Format time as "HH:MM AM/PM"
+ */
+function formatTime(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, '0');
+  return `${displayHours}:${displayMinutes} ${ampm}`;
+}
+
+/**
  * Convert amount to user's default currency
  */
 async function convertToUserCurrency(
@@ -100,6 +143,20 @@ interface StatsPageProps {
   refreshTrigger?: number;
 }
 
+interface DailyTransaction {
+  date: string;
+  total: number;
+  transactions: Array<{
+    id: string;
+    emoji: string;
+    name: string;
+    time: string;
+    amount: number;
+    type: string;
+    color: string;
+  }>;
+}
+
 const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   // categoryStats contains all converted transactions and percentages - stored for later use
@@ -110,6 +167,10 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
   const [spendingsData, setSpendingsData] = useState<Spending[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [categoryTransactions, setCategoryTransactions] = useState<DailyTransaction[]>([]);
+  const [loadingCategoryTransactions, setLoadingCategoryTransactions] = useState(false);
 
   // Fetch spendings and calculate statistics when period or user changes
   useEffect(() => {
@@ -201,6 +262,96 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
 
     fetchData();
   }, [selectedPeriod, user, refreshTrigger]);
+
+  // Handle category click - open modal and load transactions
+  const handleCategoryClick = async (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setIsCategoryModalOpen(true);
+    setLoadingCategoryTransactions(true);
+
+    try {
+      // Get user's currency exchange rate
+      const userCurrencyData = await getCurrencyByCode(userCurrency);
+      const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+
+      // Filter spendings for this category
+      const categorySpendings = spendingsData.filter(
+        spending => spending.category_id === categoryId
+      );
+
+      // Get category info
+      const category = categories.find(cat => cat.id === categoryId);
+
+      // Group by day
+      const dayMap = new Map<string, Spending[]>();
+      
+      for (const spending of categorySpendings) {
+        const date = new Date(spending.created_at);
+        const dayKey = date.toDateString();
+        
+        if (!dayMap.has(dayKey)) {
+          dayMap.set(dayKey, []);
+        }
+        dayMap.get(dayKey)!.push(spending);
+      }
+
+      // Convert to daily transactions
+      const dailyTransactions: DailyTransaction[] = [];
+      
+      for (const [dayKey, daySpendings] of dayMap.entries()) {
+        const date = new Date(dayKey);
+        let dayTotal = 0;
+
+        const transactions = await Promise.all(
+          daySpendings.map(async (spending) => {
+            // Convert amount to user's currency
+            const convertedAmount = await convertToUserCurrency(
+              spending,
+              userCurrency,
+              userCurrencyRate
+            );
+            
+            dayTotal += convertedAmount;
+
+            return {
+              id: spending.id,
+              emoji: category?.emoji || '❔',
+              name: spending.spending_name,
+              time: formatTime(new Date(spending.created_at)),
+              amount: convertedAmount,
+              type: 'Spent',
+              color: category ? getCategoryColor(category) : '#9E9E9E',
+            };
+          })
+        );
+
+        dailyTransactions.push({
+          date: formatDate(date),
+          total: dayTotal,
+          transactions: transactions.sort((a, b) => 
+            new Date(daySpendings.find(s => s.id === b.id)!.created_at).getTime() - 
+            new Date(daySpendings.find(s => s.id === a.id)!.created_at).getTime()
+          ),
+        });
+      }
+
+      // Sort by date (newest first)
+      dailyTransactions.sort((a, b) => {
+        const dateA = new Date(a.transactions[0] ? 
+          categorySpendings.find(s => s.id === a.transactions[0].id)?.created_at || '' : '');
+        const dateB = new Date(b.transactions[0] ? 
+          categorySpendings.find(s => s.id === b.transactions[0].id)?.created_at || '' : '');
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      setCategoryTransactions(dailyTransactions);
+    } catch (error) {
+      console.error('Error loading category transactions:', error);
+      setCategoryTransactions([]);
+    } finally {
+      setLoadingCategoryTransactions(false);
+    }
+  };
 
   // Handle Analyze button click
   const handleAnalyze = async () => {
@@ -441,6 +592,7 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
             {categoryStats.map((stat) => (
               <Cell
                 key={stat.categoryId}
+                onClick={() => handleCategoryClick(stat.categoryId)}
                 style={{
                   backgroundColor: 'var(--tgui--bg_color)',
                   borderRadius: '16px',
@@ -469,6 +621,105 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
           </div>
         )}
       </div>
+
+      {/* Category Transactions Modal */}
+      <Modal
+        open={isCategoryModalOpen}
+        onOpenChange={setIsCategoryModalOpen}
+        header={
+          <Modal.Header>
+            {(() => {
+              if (!selectedCategoryId) return 'Category Transactions';
+              const category = categories.find(cat => cat.id === selectedCategoryId);
+              return category ? `${category.emoji} ${category.name}` : 'Category Transactions';
+            })()}
+          </Modal.Header>
+        }
+      >
+        <div style={{ padding: '16px 16px 32px 16px' }}>
+          {loadingCategoryTransactions ? (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '40px 0',
+            }}>
+              <Spinner size="l" />
+            </div>
+          ) : categoryTransactions.length === 0 ? (
+            <div style={{
+              padding: '40px 16px',
+              textAlign: 'center',
+              color: 'var(--tgui--hint_color)',
+            }}>
+              <Text>No transactions for this category</Text>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {categoryTransactions.map((day, dayIndex) => (
+                <Section
+                  key={dayIndex}
+                  header={
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0px 16px',
+                      marginBottom: '8px',
+                      marginTop: dayIndex === 0 ? '0px' : '0px',
+                    }}>
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: 400,
+                        textTransform: 'uppercase',
+                        color: 'var(--tgui--section_header_text_color)',
+                        letterSpacing: '-0.08px',
+                      }}>
+                        {day.date}
+                      </span>
+                      <Button
+                        mode="plain"
+                        size="s"
+                        style={{
+                          minWidth: 'auto',
+                          height: 'auto',
+                          padding: 0,
+                        }}
+                      >
+                        {formatNumber(day.total)} {userCurrency}
+                      </Button>
+                    </div>
+                  }
+                >
+                  {day.transactions.map((transaction, transactionIndex) => (
+                    <Cell
+                      key={transactionIndex}
+                      before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
+                      subtitle={
+                        <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
+                          {transaction.time}
+                        </Subheadline>
+                      }
+                      after={
+                        <div style={{ textAlign: 'right' }}>
+                          <Text weight="1" style={{ color: 'var(--tgui--text_color)', display: 'block' }}>
+                            {formatNumber(transaction.amount)} {userCurrency}
+                          </Text>
+                          <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
+                            {transaction.type}
+                          </Subheadline>
+                        </div>
+                      }
+                    >
+                      <Text weight="3">{transaction.name}</Text>
+                    </Cell>
+                  ))}
+                </Section>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
