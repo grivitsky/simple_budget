@@ -287,6 +287,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
           flexDirection: 'column',
           alignItems: 'center',
           gap: '12px',
+          minHeight: '100%',
         }}>
           <Text style={{ color: 'var(--tgui--hint_color)' }}>
             All transactions are organized! 🎉
@@ -305,7 +306,6 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         marginLeft: '-16px',
         marginRight: '-16px',
         marginBottom: '-20px',
-        minHeight: '100%',
       }}>
         {/* Section Header */}
         <div style={{
