@@ -63,9 +63,36 @@ export function parseSpendingMessage(message: string): {
 
   console.log('🔍 Parsing message:', trimmed);
 
-  // Try pattern with currency first: number + optional space + currency + optional space + text
-  // Handles: "10.12 $ Food", "10.12$ Food", "10.12 $Food", "10.12$Food", "10.12 USD Food"
-  const patternWithCurrency = /^([\d.,]+)\s*(\$|€|£|¥|₹|₽|₺|zł|kr|R\$|C\$|A\$|MX\$|S\$|HK\$|[A-Z]{3})\s*(.+)$/i;
+  // Try pattern WITHOUT currency FIRST (most common case)
+  // This prevents false matches when spending name could be mistaken for currency
+  const patternWithoutCurrency = /^([\d.,]+)\s+(.+)$/;
+  const matchWithoutCurrency = trimmed.match(patternWithoutCurrency);
+  
+  console.log('📝 Pattern without currency match:', matchWithoutCurrency ? 'Yes' : 'No');
+
+  if (matchWithoutCurrency) {
+    const amountStr = matchWithoutCurrency[1].replace(',', '.');
+    const amount = parseFloat(amountStr);
+    const potentialSpendingName = matchWithoutCurrency[2].trim();
+
+    // Check if the text after amount starts with a known currency symbol/code
+    // If it does, it's likely a currency, so try the currency pattern instead
+    const upperText = potentialSpendingName.toUpperCase();
+    const startsWithKnownCurrency = 
+      potentialSpendingName.match(/^(\$|€|£|¥|₹|₽|₺|zł|kr|R\$|C\$|A\$|MX\$|S\$|HK\$)/i) ||
+      (upperText.length >= 3 && /^[A-Z]{3}\s/.test(upperText));
+
+    if (!startsWithKnownCurrency && !isNaN(amount) && potentialSpendingName) {
+      console.log('✅ Parsed (no currency):', { amount, spendingName: potentialSpendingName });
+      return { amount, currency: null, spendingName: potentialSpendingName };
+    }
+    // If it starts with currency, fall through to currency pattern
+  }
+
+  // Try pattern WITH currency: number + optional space + currency + space + text
+  // Handles: "10.12 $ Food", "10.12$ Food", "10.12 $Food", "10.12 USD Food"
+  // Note: Requires space after currency to avoid false matches
+  const patternWithCurrency = /^([\d.,]+)\s*(\$|€|£|¥|₹|₽|₺|zł|kr|R\$|C\$|A\$|MX\$|S\$|HK\$|[A-Z]{3})\s+(.+)$/i;
   const matchWithCurrency = trimmed.match(patternWithCurrency);
   
   console.log('💰 Pattern with currency match:', matchWithCurrency ? 'Yes' : 'No');
@@ -90,23 +117,6 @@ export function parseSpendingMessage(message: string): {
       return { amount, currency: currencyCode, spendingName };
     } else {
       console.log('❌ Invalid amount or spending name:', { amount, spendingName });
-    }
-  }
-
-  // Try pattern without currency: number + text
-  const patternWithoutCurrency = /^([\d.,]+)\s+(.+)$/;
-  const matchWithoutCurrency = trimmed.match(patternWithoutCurrency);
-  
-  console.log('📝 Pattern without currency match:', matchWithoutCurrency ? 'Yes' : 'No');
-
-  if (matchWithoutCurrency) {
-    const amountStr = matchWithoutCurrency[1].replace(',', '.');
-    const amount = parseFloat(amountStr);
-    const spendingName = matchWithoutCurrency[2].trim();
-
-    if (!isNaN(amount) && spendingName) {
-      console.log('✅ Parsed (no currency):', { amount, spendingName });
-      return { amount, currency: null, spendingName };
     }
   }
 
