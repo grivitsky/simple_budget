@@ -9,7 +9,7 @@ import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
-import { getCategoryColor } from '../lib/themeUtils';
+import { getCategoryColor, isDarkTheme } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
 // Transaction Circle Component
@@ -413,6 +413,11 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
               <Cell
                 key={transactionIndex}
                 onClick={() => onOpenEditor?.(transaction.id)}
+                style={{
+                  backgroundColor: isDarkTheme() 
+                    ? 'var(--tgui--bg_color)' 
+                    : 'var(--tgui--secondary_bg_color)',
+                }}
                 before={<TransactionCircle emoji={transaction.emoji} color={transaction.color} />}
                 subtitle={
                   <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
