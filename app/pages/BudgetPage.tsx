@@ -304,6 +304,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         marginLeft: '-16px',
         marginRight: '-16px',
         marginBottom: '-20px',
+        minHeight: '100%',
       }}>
         {/* Section Header */}
         <div style={{
