@@ -242,7 +242,8 @@ Now generate the analysis message following all the rules above.`;
 
     console.log('🤖 Calling OpenAI API for analysis...');
 
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // GPT-5 uses the new responses API format
+    const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -250,8 +251,9 @@ Now generate the analysis message following all the rules above.`;
       },
       body: JSON.stringify({
         model: 'gpt-5',
-        messages: [{ role: 'user', content: prompt }],
-        max_completion_tokens: 3000,
+        input: prompt,
+        reasoning: { effort: 'high' }, // High effort for comprehensive analysis
+        text: { verbosity: 'medium' }, // Medium verbosity for detailed analysis
       }),
     });
 
@@ -275,11 +277,33 @@ Now generate the analysis message following all the rules above.`;
     }
 
     const openaiData = await openaiResponse.json();
-    const analysis = openaiData.choices?.[0]?.message?.content?.trim();
+    console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
+    
+    // GPT-5 uses output_text in the response
+    let analysis: string | null = null;
+    
+    if (openaiData.output_text) {
+      analysis = openaiData.output_text.trim();
+      console.log('✅ Found analysis in output_text');
+    } else if (openaiData.text) {
+      analysis = openaiData.text.trim();
+      console.log('✅ Found analysis in text');
+    } else if (openaiData.content) {
+      analysis = openaiData.content.trim();
+      console.log('✅ Found analysis in content');
+    } else if (openaiData.output) {
+      analysis = typeof openaiData.output === 'string' 
+        ? openaiData.output.trim() 
+        : openaiData.output.text?.trim() || null;
+      console.log('✅ Found analysis in output');
+    }
 
-    if (!analysis) {
+    if (!analysis || analysis.length === 0) {
       console.error('No content from OpenAI response:', openaiData);
-      return res.status(502).json({ error: 'AI did not return a valid analysis' });
+      return res.status(502).json({ 
+        error: 'AI did not return a valid analysis',
+        response_keys: Object.keys(openaiData),
+      });
     }
 
     console.log('✅ OpenAI analysis generated');
