@@ -86,13 +86,13 @@ function App() {
   useEffect(() => {
     // Initialize Telegram Web App and authenticate user
     const initializeApp = async () => {
-      const tg = window.Telegram?.WebApp;
+    const tg = window.Telegram?.WebApp;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      if (tg) {
-        tg.ready();
-        tg.expand();
+    if (tg) {
+      tg.ready();
+      tg.expand();
         
         // Set Telegram interface colors to match app background
         tg.setHeaderColor('secondary_bg_color');

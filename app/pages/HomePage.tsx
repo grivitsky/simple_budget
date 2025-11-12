@@ -197,7 +197,7 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
                   <div style={{ textAlign: 'right' }}>
                     <Text weight="1" style={{ color: 'var(--tgui--text_color)', display: 'block' }}>
                       {transaction.amount}
-                    </Text>
+      </Text>
                     <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
                       {transaction.type}
                     </Subheadline>
