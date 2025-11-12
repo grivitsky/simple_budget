@@ -334,9 +334,9 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             gap: '4px',
           }}>
             <div style={{ paddingBottom: '2px' }}>
-              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.1} />
+              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.04} />
             </div>
-            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.2} />
+            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.08} />
           </div>
         </div>
 
@@ -347,9 +347,9 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             gap: '8px',
             justifyContent: 'center',
           }}>
-            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.3} />
-            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.4} />
-            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.5} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.12} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.16} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.2} />
           </div>
         </div>
 
@@ -368,7 +368,7 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
         }}>
           {/* Day Section Skeleton */}
           {[1, 2, 3].map((dayIndex) => {
-            const baseDelay = 0.6 + (dayIndex - 1) * 0.4;
+            const baseDelay = 0.24 + (dayIndex - 1) * 0.16;
             return (
               <div key={dayIndex} style={{ marginBottom: dayIndex < 3 ? '16px' : '0' }}>
                 {/* Day Header Skeleton */}
@@ -381,12 +381,12 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
                   marginTop: dayIndex === 1 ? '16px' : '0px',
                 }}>
                   <Skeleton width="100px" height="13px" borderRadius="4px" delay={baseDelay} />
-                  <Skeleton width="80px" height="20px" borderRadius="4px" delay={baseDelay + 0.1} />
+                  <Skeleton width="80px" height="20px" borderRadius="4px" delay={baseDelay + 0.04} />
                 </div>
                 
                 {/* Transaction Cells Skeleton */}
                 {[1, 2].map((transactionIndex) => {
-                  const transactionDelay = baseDelay + 0.2 + (transactionIndex - 1) * 0.15;
+                  const transactionDelay = baseDelay + 0.08 + (transactionIndex - 1) * 0.06;
                   return (
                     <div
                       key={transactionIndex}
@@ -405,14 +405,14 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
                       
                       {/* Content Skeleton */}
                       <div style={{ flex: 1 }}>
-                        <Skeleton width="60%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.05} />
-                        <Skeleton width="40%" height="14px" borderRadius="4px" delay={transactionDelay + 0.1} />
+                        <Skeleton width="60%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.02} />
+                        <Skeleton width="40%" height="14px" borderRadius="4px" delay={transactionDelay + 0.04} />
                       </div>
                       
                       {/* Amount Skeleton */}
                       <div style={{ textAlign: 'right' }}>
-                        <Skeleton width="70px" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.05} />
-                        <Skeleton width="50px" height="14px" borderRadius="4px" delay={transactionDelay + 0.1} />
+                        <Skeleton width="70px" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={transactionDelay + 0.02} />
+                        <Skeleton width="50px" height="14px" borderRadius="4px" delay={transactionDelay + 0.04} />
                       </div>
                     </div>
                   );
