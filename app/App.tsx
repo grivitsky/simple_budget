@@ -67,7 +67,7 @@ const tabs = [
     Icon: Icon28Stats,
     text: 'Stats',
     Component: StatsPage,
-    needsUser: false,
+    needsUser: true,
   },
   {
     id: 'settings' as TabId,

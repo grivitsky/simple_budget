@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../src/components/Blocks/Button/Button';
 import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
 import { Divider } from '../../src/components/Misc/Divider/Divider';
+import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
+import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
+import { getCurrencyByCode } from '../lib/currencyService';
+import { getAllCategories, type Category } from '../lib/categoryService';
+import type { User } from '../lib/supabase';
 
 // Category Circle Component
 const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
@@ -22,22 +27,179 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
   </div>
 );
 
-// Test categories data
-const categories = [
-  { emoji: '🍔', name: 'Eating Out', amount: '1,323.33 PLN', percentage: '56.2%', color: '#61B5F7' },
-  { emoji: '🏠', name: 'Housing', amount: '850.00 PLN', percentage: '36.1%', color: '#FF6B6B' },
-  { emoji: '🚗', name: 'Transport', amount: '450.50 PLN', percentage: '19.1%', color: '#4ECDC4' },
-  { emoji: '🛒', name: 'Groceries', amount: '620.75 PLN', percentage: '26.3%', color: '#95E1D3' },
-  { emoji: '💊', name: 'Healthcare', amount: '280.00 PLN', percentage: '11.9%', color: '#F38181' },
-  { emoji: '🎬', name: 'Entertainment', amount: '190.25 PLN', percentage: '8.1%', color: '#AA96DA' },
-  { emoji: '👕', name: 'Shopping', amount: '340.90 PLN', percentage: '14.5%', color: '#FCBAD3' },
-  { emoji: '📱', name: 'Utilities', amount: '215.00 PLN', percentage: '9.1%', color: '#FFFFD2' },
-  { emoji: '✈️', name: 'Travel', amount: '520.00 PLN', percentage: '22.1%', color: '#A8D8EA' },
-  { emoji: '🎓', name: 'Education', amount: '175.50 PLN', percentage: '7.5%', color: '#FFB6B9' },
-];
+/**
+ * Format date as "Month YYYY" (e.g., "November 2025")
+ */
+function formatPeriodDate(period: 'week' | 'month' | 'year'): string {
+  const now = new Date();
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  switch (period) {
+    case 'week': {
+      const start = getPeriodStartDate('week');
+      return `${months[start.getMonth()]} ${start.getFullYear()}`;
+    }
+    case 'month': {
+      return `${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    case 'year': {
+      return `${now.getFullYear()}`;
+    }
+  }
+}
 
-const StatsPage = () => {
+/**
+ * Format number with commas
+ */
+function formatNumber(num: number): string {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Convert amount to user's default currency
+ */
+async function convertToUserCurrency(
+  spending: Spending,
+  userDefaultCurrency: string,
+  userCurrencyRate: number
+): Promise<number> {
+  // If transaction currency matches user's default currency, return spending_amount
+  if (spending.currency_code === userDefaultCurrency) {
+    return spending.spending_amount;
+  }
+
+  // Otherwise, convert from base currency (USD) to user's default currency
+  return spending.amount_in_base_currency * userCurrencyRate;
+}
+
+interface CategoryStats {
+  categoryId: string;
+  categoryName: string;
+  emoji: string;
+  color: string;
+  textColor: string;
+  amount: number;
+  percentage: number;
+  timestamp: string; // ISO timestamp when statistics were calculated
+}
+
+interface StatsPageProps {
+  user?: User | null;
+  refreshTrigger?: number;
+}
+
+const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  // categoryStats contains all converted transactions and percentages - stored for later use
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [userCurrency, setUserCurrency] = useState<string>('USD');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch spendings and calculate statistics when period or user changes
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Fetch categories
+        const cats = await getAllCategories();
+
+        // Get user's default currency
+        const defaultCurrency = user.default_currency || 'USD';
+        setUserCurrency(defaultCurrency);
+
+        // Get period dates
+        const startDate = getPeriodStartDate(selectedPeriod);
+        const endDate = getPeriodEndDate();
+
+        // Fetch spendings for period
+        const spendingsData = await getUserSpendingsByDateRange(user.id, startDate, endDate);
+
+        // Get user's currency exchange rate
+        const userCurrencyData = await getCurrencyByCode(defaultCurrency);
+        const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+
+        // Calculate statistics by category
+        const categoryMap = new Map<string, { category: Category; total: number }>();
+
+        // Convert all spendings to user's currency and group by category
+        for (const spending of spendingsData) {
+          const convertedAmount = await convertToUserCurrency(
+            spending,
+            defaultCurrency,
+            userCurrencyRate
+          );
+
+          const categoryId = spending.category_id || 'undefined';
+          const category = cats.find(cat => cat.id === categoryId) || 
+                          cats.find(cat => cat.name === 'Undefined');
+
+          if (category) {
+            const existing = categoryMap.get(categoryId);
+            if (existing) {
+              existing.total += convertedAmount;
+            } else {
+              categoryMap.set(categoryId, {
+                category,
+                total: convertedAmount,
+              });
+            }
+          }
+        }
+
+        // Calculate total
+        let total = 0;
+        for (const { total: catTotal } of categoryMap.values()) {
+          total += catTotal;
+        }
+        setTotalAmount(total);
+
+        // Convert to array and calculate percentages
+        const timestamp = new Date().toISOString(); // Timestamp for when stats were calculated
+        const stats: CategoryStats[] = Array.from(categoryMap.values())
+          .map(({ category, total: catTotal }) => ({
+            categoryId: category.id,
+            categoryName: category.name,
+            emoji: category.emoji,
+            color: category.color,
+            textColor: category.text_color,
+            amount: catTotal,
+            percentage: total > 0 ? (catTotal / total) * 100 : 0,
+            timestamp: timestamp,
+          }))
+          .sort((a, b) => b.amount - a.amount); // Sort by amount descending
+
+        setCategoryStats(stats);
+      } catch (error) {
+        console.error('Error fetching stats data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedPeriod, user, refreshTrigger]);
+
+  if (loading) {
+    return (
+      <div style={{
+        backgroundColor: 'var(--tgui--secondary_bg_color)',
+        minHeight: '100vh',
+        padding: '16px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <Spinner size="l" />
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -58,7 +220,7 @@ const StatsPage = () => {
           color: 'var(--tgui--text_color)',
           marginBottom: '4px',
         }}>
-          November 2025
+          {formatPeriodDate(selectedPeriod)}
         </Text>
         
         {/* Amount with Currency */}
@@ -76,7 +238,7 @@ const StatsPage = () => {
               color: 'var(--tgui--hint_color)',
               lineHeight: '1',
             }}>
-              -PLN
+              -{userCurrency}
             </span>
           </div>
           <span style={{
@@ -87,7 +249,7 @@ const StatsPage = () => {
             color: 'var(--tgui--text_color)',
             lineHeight: '1',
           }}>
-            2,043.12
+            {formatNumber(totalAmount)}
           </span>
         </div>
       </div>
@@ -161,31 +323,43 @@ const StatsPage = () => {
               padding: "0px 0px 8px 0px",
             }}
           >
-            10 Categories
+            {categoryStats.length} {categoryStats.length === 1 ? 'Category' : 'Categories'}
           </Button>
         </div>
 
         {/* Category List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {categories.map((category, index) => (
-            <Cell
-              key={index}
-              style={{
-                backgroundColor: 'var(--tgui--bg_color)',
-                borderRadius: '16px',
-              }}
-              before={<CategoryCircle emoji={category.emoji} color={category.color} />}
-              subtitle={category.amount}
-              after={
-                <Text weight="1" style={{ color: 'var(--tgui--text_color)' }}>
-                  {category.percentage}
+        {categoryStats.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {categoryStats.map((stat) => (
+              <Cell
+                key={stat.categoryId}
+                style={{
+                  backgroundColor: 'var(--tgui--bg_color)',
+                  borderRadius: '16px',
+                }}
+                before={<CategoryCircle emoji={stat.emoji} color={stat.color} />}
+                subtitle={`${formatNumber(stat.amount)} ${userCurrency}`}
+                after={
+                  <Text weight="1" style={{ color: 'var(--tgui--text_color)' }}>
+                    {formatNumber(stat.percentage)}%
+                  </Text>
+                }
+              >
+                <Text weight="3" style={{ color: stat.textColor }}>
+                  {stat.categoryName}
                 </Text>
-              }
-            >
-              <Text weight="3">{category.name}</Text>
-            </Cell>
-          ))}
-        </div>
+              </Cell>
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            color: 'var(--tgui--hint_color)',
+          }}>
+            <Text>No transactions for this period</Text>
+          </div>
+        )}
       </div>
     </div>
   );
