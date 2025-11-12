@@ -143,30 +143,67 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     
     if (openaiData.choices && openaiData.choices.length > 0) {
       const choice = openaiData.choices[0];
+      console.log('🔍 Choice object:', JSON.stringify(choice, null, 2));
+      
       // Check for different possible response formats
       if (choice.message?.content) {
         extractedMessage = choice.message.content.trim();
+        console.log('✅ Found content in choice.message.content');
+      } else if (choice.message && typeof choice.message === 'string') {
+        extractedMessage = choice.message.trim();
+        console.log('✅ Found content in choice.message (string)');
       } else if (choice.text) {
         extractedMessage = choice.text.trim();
+        console.log('✅ Found content in choice.text');
       } else if (choice.content) {
         extractedMessage = choice.content.trim();
+        console.log('✅ Found content in choice.content');
       } else if (typeof choice === 'string') {
         extractedMessage = choice.trim();
+        console.log('✅ Found content in choice (string)');
+      } else {
+        console.log('⚠️ Choice structure:', {
+          hasMessage: !!choice.message,
+          messageType: typeof choice.message,
+          messageKeys: choice.message ? Object.keys(choice.message) : [],
+          choiceKeys: Object.keys(choice),
+        });
       }
     } else if (openaiData.content) {
       extractedMessage = openaiData.content.trim();
+      console.log('✅ Found content in openaiData.content');
     } else if (openaiData.text) {
       extractedMessage = openaiData.text.trim();
+      console.log('✅ Found content in openaiData.text');
     } else if (typeof openaiData === 'string') {
       extractedMessage = openaiData.trim();
+      console.log('✅ Found content in openaiData (string)');
     }
 
     if (!extractedMessage || extractedMessage.length === 0) {
-      console.error('❌ No content from OpenAI response. Full response:', JSON.stringify(openaiData, null, 2));
+      console.error('❌ No content from OpenAI response.');
+      console.error('Full response:', JSON.stringify(openaiData, null, 2));
+      console.error('Choices array:', openaiData.choices ? JSON.stringify(openaiData.choices, null, 2) : 'No choices array');
+      
+      // Try to extract any text from the response for debugging
+      const debugInfo: any = {
+        response_structure: Object.keys(openaiData),
+        choices_count: openaiData.choices?.length || 0,
+      };
+      
+      if (openaiData.choices && openaiData.choices.length > 0) {
+        debugInfo.first_choice = {
+          keys: Object.keys(openaiData.choices[0]),
+          message_keys: openaiData.choices[0].message ? Object.keys(openaiData.choices[0].message) : null,
+          message_type: typeof openaiData.choices[0].message,
+          message_value: openaiData.choices[0].message,
+        };
+      }
+      
       return res.status(502).json({ 
         error: 'AI did not return a valid transaction',
         details: 'OpenAI response did not contain extractable content',
-        response_structure: Object.keys(openaiData),
+        debug: debugInfo,
       });
     }
 
