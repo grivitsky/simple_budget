@@ -111,7 +111,7 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano', // Using mini for cost efficiency, can be changed to gpt-4 if needed
+        model: 'gpt-4o-mini', // Using mini for cost efficiency, can be changed to gpt-4 if needed
         messages: [
           {
             role: 'system',
@@ -122,7 +122,8 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
             content: openaiPrompt,
           },
         ],
-        max_completion_tokens: 150,
+        temperature: 0.3, // Lower temperature for more consistent formatting
+        max_tokens: 100,
       }),
     });
 
