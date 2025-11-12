@@ -105,6 +105,7 @@ export default async function handler(
             body: JSON.stringify({
               chat_id: chatId,
               text: responseText,
+              parse_mode: 'Markdown', // Enable markdown for italic quotes
             }),
           });
         } catch (error) {

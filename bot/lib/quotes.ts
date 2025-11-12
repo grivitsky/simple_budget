@@ -316,6 +316,7 @@ export function getRandomQuote(userName: string): string {
 
 /**
  * Format spending confirmation message
+ * Returns message with quote in italic (Telegram markdown format)
  */
 export function formatSpendingConfirmation(
   amount: number,
@@ -325,6 +326,17 @@ export function formatSpendingConfirmation(
 ): string {
   const transactionLine = `${amount} ${currency} - ${spendingName}`;
   const quote = getRandomQuote(userName);
-  return `${transactionLine}\n\n${quote}`;
+  // Escape markdown special characters in quote to prevent formatting issues
+  // Escape underscores (used for italic), asterisks, brackets, etc.
+  const escapedQuote = quote
+    .replace(/_/g, '\\_')      // Escape underscores
+    .replace(/\*/g, '\\*')     // Escape asterisks
+    .replace(/\[/g, '\\[')      // Escape opening brackets
+    .replace(/\]/g, '\\]')     // Escape closing brackets
+    .replace(/\(/g, '\\(')     // Escape opening parentheses
+    .replace(/\)/g, '\\)');    // Escape closing parentheses
+  // Make quote italic using Telegram markdown
+  const italicQuote = `_${escapedQuote}_`;
+  return `${transactionLine}\n\n${italicQuote}`;
 }
 

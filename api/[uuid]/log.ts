@@ -161,6 +161,28 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
         userName
       );
       
+      // Send confirmation message to user's Telegram chat
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (botToken && user.telegram_id) {
+        try {
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: user.telegram_id,
+              text: confirmationMessage,
+              parse_mode: 'Markdown', // Enable markdown for italic quotes
+            }),
+          });
+          console.log('✅ Telegram message sent to user');
+        } catch (error) {
+          console.error('Error sending Telegram message:', error);
+          // Don't fail the request if Telegram message fails
+        }
+      } else {
+        console.warn('⚠️ Telegram bot token or user telegram_id not available, skipping Telegram notification');
+      }
+      
       return res.status(200).json({
         success: true,
         message: confirmationMessage,
