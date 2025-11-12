@@ -77,7 +77,9 @@ export default async function handler(
       }
 
       // Create spending from message
+      console.log('📨 Processing message:', messageText);
       const spending = await createSpendingFromMessage(user, messageText);
+      console.log('📊 Parsing result:', spending ? 'Success' : 'Failed');
 
       if (spending) {
         // Send success response to user via Telegram Bot API

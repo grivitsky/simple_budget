@@ -57,52 +57,63 @@ export function parseSpendingMessage(message: string): {
 } {
   const trimmed = message.trim();
   if (!trimmed) {
+    console.log('❌ Empty message');
     return { amount: null, currency: null, spendingName: null };
   }
 
-  // Pattern: number (with . or , as decimal) + optional currency + text
-  const pattern = /^([\d.,]+)\s*(?:\$|€|£|¥|₹|₽|₺|zł|kr|R\$|C\$|A\$|MX\$|S\$|HK\$|[A-Z]{3})?\s*(.+)$/i;
-  const match = trimmed.match(pattern);
+  console.log('🔍 Parsing message:', trimmed);
 
-  if (!match) {
-    // Try simpler pattern: just number and text (no currency)
-    const simplePattern = /^([\d.,]+)\s+(.+)$/;
-    const simpleMatch = trimmed.match(simplePattern);
-    
-    if (simpleMatch) {
-      const amountStr = simpleMatch[1].replace(',', '.');
-      const amount = parseFloat(amountStr);
-      const spendingName = simpleMatch[2].trim();
-      
-      if (!isNaN(amount) && spendingName) {
-        return { amount, currency: null, spendingName };
+  // Try pattern with currency first: number + optional space + currency + optional space + text
+  // Handles: "10.12 $ Food", "10.12$ Food", "10.12 $Food", "10.12$Food", "10.12 USD Food"
+  const patternWithCurrency = /^([\d.,]+)\s*(\$|€|£|¥|₹|₽|₺|zł|kr|R\$|C\$|A\$|MX\$|S\$|HK\$|[A-Z]{3})\s*(.+)$/i;
+  const matchWithCurrency = trimmed.match(patternWithCurrency);
+  
+  console.log('💰 Pattern with currency match:', matchWithCurrency ? 'Yes' : 'No');
+
+  if (matchWithCurrency) {
+    const amountStr = matchWithCurrency[1].replace(',', '.');
+    const amount = parseFloat(amountStr);
+    const currencySymbol = matchWithCurrency[2].trim();
+    const spendingName = matchWithCurrency[3].trim();
+
+    if (!isNaN(amount) && spendingName) {
+      // Convert currency symbol to code
+      let currencyCode: string | null = null;
+      const upperSymbol = currencySymbol.toUpperCase();
+      if (CURRENCY_SYMBOL_MAP[upperSymbol]) {
+        currencyCode = CURRENCY_SYMBOL_MAP[upperSymbol];
+      } else if (upperSymbol.length === 3) {
+        currencyCode = upperSymbol;
       }
-    }
-    
-    return { amount: null, currency: null, spendingName: null };
-  }
 
-  const amountStr = match[1].replace(',', '.');
-  const amount = parseFloat(amountStr);
-  const currencySymbol = match[2]?.trim().toUpperCase() || null;
-  const spendingName = match[3]?.trim() || null;
-
-  if (isNaN(amount)) {
-    return { amount: null, currency: null, spendingName: null };
-  }
-
-  // Convert currency symbol to code
-  let currencyCode: string | null = null;
-  if (currencySymbol) {
-    if (CURRENCY_SYMBOL_MAP[currencySymbol]) {
-      currencyCode = CURRENCY_SYMBOL_MAP[currencySymbol];
-    } else if (currencySymbol.length === 3) {
-      currencyCode = currencySymbol;
+      console.log('✅ Parsed (with currency):', { amount, currency: currencyCode, spendingName });
+      return { amount, currency: currencyCode, spendingName };
+    } else {
+      console.log('❌ Invalid amount or spending name:', { amount, spendingName });
     }
   }
 
-  return { amount, currency: currencyCode, spendingName };
-}
+  // Try pattern without currency: number + text
+  const patternWithoutCurrency = /^([\d.,]+)\s+(.+)$/;
+  const matchWithoutCurrency = trimmed.match(patternWithoutCurrency);
+  
+  console.log('📝 Pattern without currency match:', matchWithoutCurrency ? 'Yes' : 'No');
+
+  if (matchWithoutCurrency) {
+    const amountStr = matchWithoutCurrency[1].replace(',', '.');
+    const amount = parseFloat(amountStr);
+    const spendingName = matchWithoutCurrency[2].trim();
+
+    if (!isNaN(amount) && spendingName) {
+      console.log('✅ Parsed (no currency):', { amount, spendingName });
+      return { amount, currency: null, spendingName };
+    }
+  }
+
+  // No match found
+  console.log('❌ No pattern matched for:', trimmed);
+  return { amount: null, currency: null, spendingName: null };
+
 
 /**
  * Create a spending entry from a Telegram message
