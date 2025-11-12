@@ -322,7 +322,6 @@ export const MOTIVATIONAL_QUOTES = [
   "Future vacations whispered: 'thanks, {name}'.",
   "Money map updated, {name}. Detours denied.",
   "Another quiet W on the board, {name}.",
-  "Discipline dialed to 11, {name}.",
   "Clarity rising, stress declining—trend approved, {name}.",
   "Budget armor reinforced, {name}. Proceed boldly.",
   "You turned impulse into insight, {name}.",
