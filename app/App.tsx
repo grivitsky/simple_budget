@@ -60,7 +60,7 @@ const tabs = [
     Icon: Icon28Archive,
     text: 'Organize',
     Component: BudgetPage,
-    needsUser: false,
+    needsUser: true,
   },
   {
     id: 'stats' as TabId,
