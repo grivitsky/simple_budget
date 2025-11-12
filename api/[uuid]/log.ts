@@ -104,16 +104,26 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
 
     console.log('🤖 Calling OpenAI API...');
     
-    // GPT-5-nano uses the responses API
-    const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-nano', // Optimized for speed and real-time SMS analysis
-        input: `You are a helpful accountant assistant that extracts transaction information from SMS messages. Always return only the transaction in the specified format, nothing else.\n\n${openaiPrompt}`,
+        model: 'gpt-4o-mini', // Using mini for cost efficiency
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful accountant assistant that extracts transaction information from SMS messages. Always return only the transaction in the specified format, nothing else.',
+          },
+          {
+            role: 'user',
+            content: openaiPrompt,
+          },
+        ],
+        temperature: 0.3, // Lower temperature for more consistent formatting
+        max_tokens: 100,
       }),
     });
 
@@ -127,49 +137,11 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     }
 
     const openaiData = await openaiResponse.json();
-    console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
-    
-    // GPT-5 responses API format: output[0].content[0].text
-    let extractedMessage: string | null = null;
-    
-    if (openaiData.output && Array.isArray(openaiData.output) && openaiData.output.length > 0) {
-      const firstOutput = openaiData.output[0];
-      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
-        const firstContent = firstOutput.content[0];
-        if (firstContent.type === 'output_text' && firstContent.text) {
-          extractedMessage = firstContent.text.trim();
-          console.log('✅ Found content in output[0].content[0].text');
-        } else {
-          console.log('⚠️ Content structure:', {
-            type: firstContent.type,
-            hasText: !!firstContent.text,
-            contentKeys: Object.keys(firstContent),
-          });
-        }
-      } else {
-        console.log('⚠️ Output structure:', {
-          hasContent: !!firstOutput.content,
-          contentType: Array.isArray(firstOutput.content) ? 'array' : typeof firstOutput.content,
-          outputKeys: Object.keys(firstOutput),
-        });
-      }
-    } else {
-      console.log('⚠️ Response structure:', {
-        hasOutput: !!openaiData.output,
-        outputType: Array.isArray(openaiData.output) ? 'array' : typeof openaiData.output,
-        responseKeys: Object.keys(openaiData),
-      });
-    }
+    const extractedMessage = openaiData.choices?.[0]?.message?.content?.trim();
 
-    if (!extractedMessage || extractedMessage.length === 0) {
-      console.error('❌ No content from OpenAI response.');
-      console.error('Full response:', JSON.stringify(openaiData, null, 2));
-      
-      return res.status(502).json({ 
-        error: 'AI did not return a valid transaction',
-        details: 'OpenAI response did not contain extractable content',
-        response_keys: Object.keys(openaiData),
-      });
+    if (!extractedMessage) {
+      console.error('No content from OpenAI response:', openaiData);
+      return res.status(502).json({ error: 'AI did not return a valid transaction' });
     }
 
     console.log('✅ OpenAI extracted:', extractedMessage);

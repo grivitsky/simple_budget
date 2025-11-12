@@ -242,16 +242,17 @@ Now generate the analysis message following all the rules above.`;
 
     console.log('🤖 Calling OpenAI API for analysis...');
 
-    // GPT-5 uses the responses API
-    const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5',
-        input: prompt,
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 3000,
+        temperature: 0.7,
       }),
     });
 
@@ -275,46 +276,11 @@ Now generate the analysis message following all the rules above.`;
     }
 
     const openaiData = await openaiResponse.json();
-    console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
-    
-    // GPT-5 responses API format: output[0].content[0].text
-    let analysis: string | null = null;
-    
-    if (openaiData.output && Array.isArray(openaiData.output) && openaiData.output.length > 0) {
-      const firstOutput = openaiData.output[0];
-      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
-        const firstContent = firstOutput.content[0];
-        if (firstContent.type === 'output_text' && firstContent.text) {
-          analysis = firstContent.text.trim();
-          console.log('✅ Found analysis in output[0].content[0].text');
-        } else {
-          console.log('⚠️ Content structure:', {
-            type: firstContent.type,
-            hasText: !!firstContent.text,
-            contentKeys: Object.keys(firstContent),
-          });
-        }
-      } else {
-        console.log('⚠️ Output structure:', {
-          hasContent: !!firstOutput.content,
-          contentType: Array.isArray(firstOutput.content) ? 'array' : typeof firstOutput.content,
-          outputKeys: Object.keys(firstOutput),
-        });
-      }
-    } else {
-      console.log('⚠️ Response structure:', {
-        hasOutput: !!openaiData.output,
-        outputType: Array.isArray(openaiData.output) ? 'array' : typeof openaiData.output,
-        responseKeys: Object.keys(openaiData),
-      });
-    }
+    const analysis = openaiData.choices?.[0]?.message?.content?.trim();
 
-    if (!analysis || analysis.length === 0) {
+    if (!analysis) {
       console.error('No content from OpenAI response:', openaiData);
-      return res.status(502).json({ 
-        error: 'AI did not return a valid analysis',
-        response_keys: Object.keys(openaiData),
-      });
+      return res.status(502).json({ error: 'AI did not return a valid analysis' });
     }
 
     console.log('✅ OpenAI analysis generated');
