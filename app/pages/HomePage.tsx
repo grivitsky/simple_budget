@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
 import { Button } from '../../src/components/Blocks/Button/Button';
 import { Section } from '../../src/components/Blocks/Section/Section';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
+import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
+import { getCurrencyByCode } from '../lib/currencyService';
+import { getAllCategories, type Category } from '../lib/categoryService';
+import type { User } from '../lib/supabase';
 
 // Transaction Circle Component
 const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) => (
@@ -22,43 +26,246 @@ const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) =
   </div>
 );
 
-// Daily transactions data
-const dailyTransactions = [
-  {
-    date: 'Tue, 5 NOV',
-    total: '-100.88 PLN',
-    transactions: [
-      { emoji: '🍔', name: 'McDonalds', time: '12:00 AM', amount: '-30.32 PLN', type: 'Spent', color: '#61B5F7' },
-      { emoji: '🛒', name: 'Biedronka', time: '3:45 PM', amount: '-45.50 PLN', type: 'Spent', color: '#95E1D3' },
-      { emoji: '☕', name: 'Starbucks', time: '9:15 AM', amount: '-25.06 PLN', type: 'Spent', color: '#AA96DA' },
-    ]
-  },
-  {
-    date: 'Mon, 3 NOV',
-    total: '-245.60 PLN',
-    transactions: [
-      { emoji: '🚗', name: 'Shell Gas', time: '7:30 AM', amount: '-180.00 PLN', type: 'Spent', color: '#4ECDC4' },
-      { emoji: '🎬', name: 'Cinema City', time: '8:00 PM', amount: '-45.00 PLN', type: 'Spent', color: '#AA96DA' },
-      { emoji: '🍕', name: 'Pizza Hut', time: '6:30 PM', amount: '-20.60 PLN', type: 'Spent', color: '#FCBAD3' },
-    ]
-  },
-  {
-    date: 'Sun, 2 NOV',
-    total: '-320.45 PLN',
-    transactions: [
-      { emoji: '👕', name: 'H&M', time: '2:00 PM', amount: '-150.00 PLN', type: 'Spent', color: '#FCBAD3' },
-      { emoji: '🏠', name: 'IKEA', time: '4:30 PM', amount: '-120.45 PLN', type: 'Spent', color: '#FF6B6B' },
-      { emoji: '📱', name: 'Apple Store', time: '11:00 AM', amount: '-50.00 PLN', type: 'Spent', color: '#FFF176' },
-    ]
-  },
-];
+/**
+ * Format date as "Day, DD MON" (e.g., "Tue, 5 NOV")
+ */
+function formatDate(date: Date): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const day = days[date.getDay()];
+  const dayNum = date.getDate();
+  const month = months[date.getMonth()];
+  return `${day}, ${dayNum} ${month}`;
+}
+
+/**
+ * Format time as "HH:MM AM/PM"
+ */
+function formatTime(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, '0');
+  return `${displayHours}:${displayMinutes} ${ampm}`;
+}
+
+/**
+ * Convert amount to user's default currency
+ */
+async function convertToUserCurrency(
+  spending: Spending,
+  userDefaultCurrency: string,
+  userCurrencyRate: number
+): Promise<number> {
+  // If transaction currency matches user's default currency, return spending_amount
+  if (spending.currency_code === userDefaultCurrency) {
+    return spending.spending_amount;
+  }
+
+  // Otherwise, convert from base currency (USD) to user's default currency
+  // amount_in_base_currency is in USD
+  // Convert: USD -> user's currency
+  // Formula: amount_in_base_currency * userCurrencyRate
+  return spending.amount_in_base_currency * userCurrencyRate;
+}
 
 interface HomePageProps {
   onOpenEditor?: () => void;
+  user?: User | null;
 }
 
-const HomePage = ({ onOpenEditor }: HomePageProps) => {
+interface DailyTransaction {
+  date: string;
+  total: number;
+  transactions: Array<{
+    id: string;
+    emoji: string;
+    name: string;
+    time: string;
+    amount: number;
+    type: string;
+    color: string;
+  }>;
+}
+
+const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [spendings, setSpendings] = useState<Spending[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [userCurrency, setUserCurrency] = useState<string>('USD');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch spendings and categories when period or user changes
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // Fetch categories
+        const cats = await getAllCategories();
+        setCategories(cats);
+
+        // Get user's default currency
+        const defaultCurrency = user.default_currency || 'USD';
+        setUserCurrency(defaultCurrency);
+
+        // Get period dates
+        const startDate = getPeriodStartDate(selectedPeriod);
+        const endDate = getPeriodEndDate();
+
+        // Fetch spendings for period
+        const spendingsData = await getUserSpendingsByDateRange(user.id, startDate, endDate);
+        setSpendings(spendingsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedPeriod, user]);
+
+  // Process spendings into daily transactions
+  const processDailyTransactions = async (): Promise<DailyTransaction[]> => {
+    if (!user?.id || spendings.length === 0) return [];
+
+    // Get user's currency exchange rate
+    const userCurrencyData = await getCurrencyByCode(userCurrency);
+    const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+
+    // Group by day
+    const dayMap = new Map<string, Spending[]>();
+    
+    for (const spending of spendings) {
+      const date = new Date(spending.created_at);
+      const dayKey = date.toDateString();
+      
+      if (!dayMap.has(dayKey)) {
+        dayMap.set(dayKey, []);
+      }
+      dayMap.get(dayKey)!.push(spending);
+    }
+
+    // Convert to daily transactions
+    const dailyTransactions: DailyTransaction[] = [];
+    
+    for (const [dayKey, daySpendings] of dayMap.entries()) {
+      const date = new Date(dayKey);
+      let dayTotal = 0;
+
+      const transactions = await Promise.all(
+        daySpendings.map(async (spending) => {
+          // Get category
+          const category = categories.find(cat => cat.id === spending.category_id) || 
+                          categories.find(cat => cat.name === 'Undefined');
+          
+          // Convert amount to user's currency
+          const convertedAmount = await convertToUserCurrency(
+            spending,
+            userCurrency,
+            userCurrencyRate
+          );
+          
+          dayTotal += convertedAmount;
+
+          return {
+            id: spending.id,
+            emoji: category?.emoji || '❔',
+            name: spending.spending_name,
+            time: formatTime(new Date(spending.created_at)),
+            amount: convertedAmount,
+            type: 'Spent',
+            color: category?.color || '#9E9E9E',
+          };
+        })
+      );
+
+      dailyTransactions.push({
+        date: formatDate(date),
+        total: dayTotal,
+        transactions: transactions.sort((a, b) => 
+          new Date(daySpendings.find(s => s.id === b.id)!.created_at).getTime() - 
+          new Date(daySpendings.find(s => s.id === a.id)!.created_at).getTime()
+        ),
+      });
+    }
+
+    // Sort by date (newest first)
+    dailyTransactions.sort((a, b) => {
+      const dateA = new Date(a.transactions[0] ? 
+        spendings.find(s => s.id === a.transactions[0].id)?.created_at || '' : '');
+      const dateB = new Date(b.transactions[0] ? 
+        spendings.find(s => s.id === b.transactions[0].id)?.created_at || '' : '');
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    return dailyTransactions;
+  };
+
+  const [dailyTransactions, setDailyTransactions] = useState<DailyTransaction[]>([]);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+
+  // Process transactions when data changes
+  useEffect(() => {
+    const processData = async () => {
+      if (spendings.length > 0 && categories.length > 0 && user) {
+        const processed = await processDailyTransactions();
+        setDailyTransactions(processed);
+        
+        // Calculate total
+        const total = processed.reduce((sum, day) => sum + day.total, 0);
+        setTotalAmount(total);
+      } else {
+        setDailyTransactions([]);
+        setTotalAmount(0);
+      }
+    };
+
+    processData();
+  }, [spendings, categories, user, userCurrency]);
+
+  // Get period label
+  const getPeriodLabel = () => {
+    switch (selectedPeriod) {
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'year':
+        return 'This Year';
+    }
+  };
+
+  // Format currency symbol (will be enhanced to fetch from currencyService)
+  const getCurrencySymbol = () => {
+    return `-${userCurrency}`;
+  };
+
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        backgroundColor: 'var(--tgui--secondary_bg_color)',
+        minHeight: '100vh',
+        padding: '16px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <Text>Loading...</Text>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -79,7 +286,7 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
           color: 'var(--tgui--text_color)',
           marginBottom: '4px',
         }}>
-          This Month
+          {getPeriodLabel()}
         </Text>
 
         {/* Amount with Currency */}
@@ -97,7 +304,7 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
               color: 'var(--tgui--hint_color)',
               lineHeight: '1',
             }}>
-              -PLN
+              {getCurrencySymbol()}
             </span>
           </div>
           <span style={{
@@ -108,7 +315,7 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
             color: 'var(--tgui--text_color)',
             lineHeight: '1',
           }}>
-            2,043.12
+            {formatNumber(totalAmount)}
           </span>
         </div>
       </div>
@@ -147,8 +354,17 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
         marginRight: '-16px',
         marginBottom: '-20px',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {dailyTransactions.map((day, dayIndex) => (
+        {dailyTransactions.length === 0 ? (
+          <div style={{
+            padding: '40px 16px',
+            textAlign: 'center',
+            color: 'var(--tgui--hint_color)',
+          }}>
+            <Text>No transactions for this period</Text>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {dailyTransactions.map((day, dayIndex) => (
           <Section
             key={dayIndex}
             header={
@@ -178,7 +394,7 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
                     padding: 0,
                   }}
                 >
-                  {day.total}
+                  {formatNumber(day.total)} {userCurrency}
                 </Button>
               </div>
             }
@@ -196,8 +412,8 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
                 after={
                   <div style={{ textAlign: 'right' }}>
                     <Text weight="1" style={{ color: 'var(--tgui--text_color)', display: 'block' }}>
-                      {transaction.amount}
-      </Text>
+                      {formatNumber(transaction.amount)} {userCurrency}
+                    </Text>
                     <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--subtitle_text_color)' }}>
                       {transaction.type}
                     </Subheadline>
@@ -208,8 +424,9 @@ const HomePage = ({ onOpenEditor }: HomePageProps) => {
               </Cell>
             ))}
           </Section>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

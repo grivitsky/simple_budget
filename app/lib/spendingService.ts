@@ -218,3 +218,75 @@ export async function getUserSpendings(userId: string): Promise<Spending[]> {
   }
 }
 
+/**
+ * Get spendings for a user within a date range
+ */
+export async function getUserSpendingsByDateRange(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<Spending[]> {
+  try {
+    const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
+
+    const { data, error } = await supabase
+      .from('spendings')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', startISO)
+      .lte('created_at', endISO)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching spendings by date range:', error);
+      return [];
+    }
+
+    return data as Spending[];
+  } catch (error) {
+    console.error('Unexpected error in getUserSpendingsByDateRange:', error);
+    return [];
+  }
+}
+
+/**
+ * Get start date for period
+ */
+export function getPeriodStartDate(period: 'week' | 'month' | 'year'): Date {
+  const now = new Date();
+  const start = new Date(now);
+
+  switch (period) {
+    case 'week': {
+      // Get closest Monday (start of week)
+      const day = start.getDay();
+      const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+      start.setDate(diff);
+      start.setHours(0, 0, 0, 0);
+      break;
+    }
+    case 'month': {
+      // First day of current month
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    }
+    case 'year': {
+      // First day of current year
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      break;
+    }
+  }
+
+  return start;
+}
+
+/**
+ * Get end date for period (now)
+ */
+export function getPeriodEndDate(): Date {
+  return new Date();
+}
+
