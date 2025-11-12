@@ -5,7 +5,6 @@ import { Button } from '../../src/components/Blocks/Button/Button';
 import { Section } from '../../src/components/Blocks/Section/Section';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
-import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
@@ -27,6 +26,51 @@ const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) =
     {emoji}
   </div>
 );
+
+// Skeleton Component
+const Skeleton = ({ 
+  width, 
+  height, 
+  borderRadius = '4px',
+  style 
+}: { 
+  width?: string | number; 
+  height?: string | number; 
+  borderRadius?: string;
+  style?: React.CSSProperties;
+}) => {
+  const skeletonStyle: React.CSSProperties = {
+    width: width || '100%',
+    height: height || '16px',
+    borderRadius,
+    backgroundColor: 'var(--tgui--secondary_bg_color)',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style,
+  };
+
+  const shimmerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(128, 128, 128, 0.2), transparent)',
+    animation: 'shimmer 1.5s infinite',
+  };
+
+  return (
+    <div style={skeletonStyle}>
+      <div style={shimmerStyle} />
+      <style>{`
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 /**
  * Format date as "Day, DD MON" (e.g., "Tue, 5 NOV")
@@ -268,11 +312,106 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
         backgroundColor: 'var(--tgui--secondary_bg_color)',
         minHeight: '100vh',
         padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
       }}>
-        <Spinner size="l" />
+        {/* Section 1: Period and Amount Header Skeleton */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '16px',
+          padding: '32px 0px 24px 0px',
+        }}>
+          {/* Period Label Skeleton */}
+          <Skeleton width="120px" height="20px" borderRadius="4px" style={{ marginBottom: '4px' }} />
+          
+          {/* Amount with Currency Skeleton */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '4px',
+          }}>
+            <div style={{ paddingBottom: '2px' }}>
+              <Skeleton width="60px" height="28px" borderRadius="4px" />
+            </div>
+            <Skeleton width="140px" height="44px" borderRadius="4px" />
+          </div>
+        </div>
+
+        {/* Section 2: Period Tabs Skeleton */}
+        <div style={{ marginBottom: '0px' }}>
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            justifyContent: 'center',
+          }}>
+            <Skeleton width="60px" height="36px" borderRadius="8px" />
+            <Skeleton width="60px" height="36px" borderRadius="8px" />
+            <Skeleton width="60px" height="36px" borderRadius="8px" />
+          </div>
+        </div>
+
+        {/* Section 3: Daily Summary Skeleton */}
+        <div style={{
+          backgroundColor: 'var(--tgui--bg_color)',
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px',
+          borderBottomLeftRadius: '0px',
+          borderBottomRightRadius: '0px',
+          padding: '16px',
+          marginLeft: '-16px',
+          marginRight: '-16px',
+          marginBottom: '-20px',
+          marginTop: '16px',
+        }}>
+          {/* Day Section Skeleton */}
+          {[1, 2, 3].map((dayIndex) => (
+            <div key={dayIndex} style={{ marginBottom: dayIndex < 3 ? '16px' : '0' }}>
+              {/* Day Header Skeleton */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0px 16px',
+                marginBottom: '8px',
+                marginTop: dayIndex === 1 ? '16px' : '0px',
+              }}>
+                <Skeleton width="100px" height="13px" borderRadius="4px" />
+                <Skeleton width="80px" height="20px" borderRadius="4px" />
+              </div>
+              
+              {/* Transaction Cells Skeleton */}
+              {[1, 2].map((transactionIndex) => (
+                <div
+                  key={transactionIndex}
+                  style={{
+                    backgroundColor: 'var(--tgui--secondary_bg_color)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    marginBottom: transactionIndex < 2 ? '8px' : '0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  {/* Circle Skeleton */}
+                  <Skeleton width="48px" height="48px" borderRadius="50%" />
+                  
+                  {/* Content Skeleton */}
+                  <div style={{ flex: 1 }}>
+                    <Skeleton width="60%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="40%" height="14px" borderRadius="4px" />
+                  </div>
+                  
+                  {/* Amount Skeleton */}
+                  <div style={{ textAlign: 'right' }}>
+                    <Skeleton width="70px" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} />
+                    <Skeleton width="50px" height="14px" borderRadius="4px" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
