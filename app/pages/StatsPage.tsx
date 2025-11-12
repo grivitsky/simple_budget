@@ -47,6 +47,54 @@ const TransactionCircle = ({ emoji, color }: { emoji: string; color: string }) =
   </div>
 );
 
+// Skeleton Component
+const Skeleton = ({ 
+  width, 
+  height, 
+  borderRadius = '4px',
+  style,
+  delay = 0
+}: { 
+  width?: string | number; 
+  height?: string | number; 
+  borderRadius?: string;
+  style?: React.CSSProperties;
+  delay?: number;
+}) => {
+  const skeletonStyle: React.CSSProperties = {
+    width: width || '100%',
+    height: height || '16px',
+    borderRadius,
+    backgroundColor: 'var(--tgui--secondary_bg_color)',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style,
+  };
+
+  const shimmerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(128, 128, 128, 0.2), transparent)',
+    animation: 'shimmer 1.5s infinite',
+    animationDelay: `${delay}s`,
+  };
+
+  return (
+    <div style={skeletonStyle}>
+      <div style={shimmerStyle} />
+      <style>{`
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 /**
  * Format date as "Month YYYY" (e.g., "November 2025") or "DD Mon - DD Mon" for week
  */
@@ -449,11 +497,97 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
         backgroundColor: 'var(--tgui--secondary_bg_color)',
         minHeight: '100vh',
         padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
       }}>
-        <Spinner size="l" />
+        {/* Period and Amount Header Skeleton */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '16px',
+          padding: '32px 0px 24px 0px',
+        }}>
+          {/* Date Skeleton */}
+          <Skeleton width="120px" height="20px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={0} />
+          
+          {/* Amount with Currency Skeleton */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '4px',
+          }}>
+            <div style={{ paddingBottom: '2px' }}>
+              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.04} />
+            </div>
+            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.08} />
+          </div>
+        </div>
+
+        {/* Analyze Button Skeleton */}
+        <Skeleton width="100%" height="48px" borderRadius="12px" style={{ marginBottom: '24px' }} delay={0.12} />
+
+        {/* Period Tabs Skeleton */}
+        <div style={{ marginBottom: '0px' }}>
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            justifyContent: 'center',
+          }}>
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.16} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.2} />
+            <Skeleton width="60px" height="36px" borderRadius="8px" delay={0.24} />
+          </div>
+        </div>
+
+        {/* Divider Skeleton */}
+        <div style={{
+          marginLeft: '-16px',
+          marginRight: '-16px',
+          marginBottom: '16px',
+          marginTop: '16px',
+        }}>
+          <Skeleton width="100%" height="1px" borderRadius="0px" delay={0.28} />
+        </div>
+
+        {/* Category Section Skeleton */}
+        <div>
+          {/* Section Header Skeleton */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px 12px 8px 12px',
+          }}>
+            <Skeleton width="100px" height="13px" borderRadius="4px" delay={0.32} />
+            <Skeleton width="100px" height="20px" borderRadius="4px" delay={0.36} />
+          </div>
+
+          {/* Category List Skeleton */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[1, 2, 3, 4, 5].map((index) => {
+              const delay = 0.4 + (index - 1) * 0.06;
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: 'var(--tgui--bg_color)',
+                    borderRadius: '16px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <Skeleton width="40px" height="40px" borderRadius="50%" delay={delay} />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton width="50%" height="16px" borderRadius="4px" style={{ marginBottom: '4px' }} delay={delay + 0.02} />
+                    <Skeleton width="30%" height="14px" borderRadius="4px" delay={delay + 0.04} />
+                  </div>
+                  <Skeleton width="50px" height="16px" borderRadius="4px" delay={delay + 0.02} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   }

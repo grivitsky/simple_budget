@@ -5,7 +5,6 @@ import { Card } from '../../src/components/Blocks/Card/Card';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
-import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendings, updateSpending, type Spending } from '../lib/spendingService';
 import { getAllCategories, getUndefinedCategory, type Category } from '../lib/categoryService';
 import { getCurrencyByCode } from '../lib/currencyService';
@@ -27,6 +26,54 @@ const CategoryCircle = ({ emoji, color }: { emoji: string; color: string }) => (
     {emoji}
   </div>
 );
+
+// Skeleton Component
+const Skeleton = ({ 
+  width, 
+  height, 
+  borderRadius = '4px',
+  style,
+  delay = 0
+}: { 
+  width?: string | number; 
+  height?: string | number; 
+  borderRadius?: string;
+  style?: React.CSSProperties;
+  delay?: number;
+}) => {
+  const skeletonStyle: React.CSSProperties = {
+    width: width || '100%',
+    height: height || '16px',
+    borderRadius,
+    backgroundColor: 'var(--tgui--secondary_bg_color)',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style,
+  };
+
+  const shimmerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(128, 128, 128, 0.2), transparent)',
+    animation: 'shimmer 1.5s infinite',
+    animationDelay: `${delay}s`,
+  };
+
+  return (
+    <div style={skeletonStyle}>
+      <div style={shimmerStyle} />
+      <style>{`
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 /**
  * Format date as "DD MON, HH:MM" (e.g., "4 Nov, 15:54")
@@ -182,11 +229,105 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         backgroundColor: 'var(--tgui--secondary_bg_color)',
         minHeight: '100vh',
         padding: '16px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
       }}>
-        <Spinner size="l" />
+        {/* Section 1: Header Skeleton */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px',
+        }}>
+          <Skeleton width="100px" height="24px" borderRadius="4px" delay={0} />
+          <Skeleton width="80px" height="20px" borderRadius="4px" delay={0.04} />
+        </div>
+
+        {/* Section 2: Transaction Card Skeleton */}
+        <Card style={{
+          backgroundColor: 'var(--tgui--bg_color)',
+          borderRadius: '12px',
+          margin: '0 0 24px 0',
+          padding: '40px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          {/* Amount Wrapper Skeleton */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '4px',
+          }}>
+            <div style={{ paddingBottom: '2px' }}>
+              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.08} />
+            </div>
+            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.12} />
+          </div>
+
+          {/* Info Wrapper Skeleton */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+          }}>
+            <Skeleton width="120px" height="16px" borderRadius="4px" delay={0.16} />
+            <div style={{
+              width: '1px',
+              height: '12px',
+              backgroundColor: 'var(--tgui--secondary_bg_color)',
+            }} />
+            <Skeleton width="90px" height="16px" borderRadius="4px" delay={0.2} />
+          </div>
+        </Card>
+
+        {/* Section 3: Category Selection Skeleton */}
+        <div style={{
+          backgroundColor: 'var(--tgui--bg_color)',
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px',
+          borderBottomLeftRadius: '0px',
+          borderBottomRightRadius: '0px',
+          padding: '16px',
+          marginLeft: '-16px',
+          marginRight: '-16px',
+          marginBottom: '-20px',
+        }}>
+          {/* Section Header Skeleton */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
+            padding: '0px 12px',
+          }}>
+            <Skeleton width="120px" height="13px" borderRadius="4px" delay={0.24} />
+            <Skeleton width="100px" height="20px" borderRadius="4px" delay={0.28} />
+          </div>
+
+          {/* Categories List Skeleton */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[1, 2, 3, 4, 5].map((index) => {
+              const delay = 0.32 + (index - 1) * 0.06;
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: 'var(--tgui--secondary_bg_color)',
+                    borderRadius: '16px',
+                    padding: '6px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <Skeleton width="32px" height="32px" borderRadius="50%" delay={delay} />
+                  <Skeleton width="60%" height="16px" borderRadius="4px" delay={delay + 0.02} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   }

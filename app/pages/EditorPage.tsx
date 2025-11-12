@@ -4,12 +4,59 @@ import { Input } from '../../src/components/Form/Input/Input';
 import { Select } from '../../src/components/Form/Select/Select';
 import { Card } from '../../src/components/Blocks/Card/Card';
 import { Text } from '../../src/components/Typography/Text/Text';
-import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { Icon28Check } from '../../src/icons/28/check';
 import { Icon28Bin } from '../../src/icons/28/bin';
 import { updateSpending, deleteSpending, getSpendingById, type Spending } from '../lib/spendingService';
 import { getAllCategories, type Category } from '../lib/categoryService';
 import type { User } from '../lib/supabase';
+
+// Skeleton Component
+const Skeleton = ({ 
+  width, 
+  height, 
+  borderRadius = '4px',
+  style,
+  delay = 0
+}: { 
+  width?: string | number; 
+  height?: string | number; 
+  borderRadius?: string;
+  style?: React.CSSProperties;
+  delay?: number;
+}) => {
+  const skeletonStyle: React.CSSProperties = {
+    width: width || '100%',
+    height: height || '16px',
+    borderRadius,
+    backgroundColor: 'var(--tgui--secondary_bg_color)',
+    position: 'relative',
+    overflow: 'hidden',
+    ...style,
+  };
+
+  const shimmerStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(128, 128, 128, 0.2), transparent)',
+    animation: 'shimmer 1.5s infinite',
+    animationDelay: `${delay}s`,
+  };
+
+  return (
+    <div style={skeletonStyle}>
+      <div style={shimmerStyle} />
+      <style>{`
+        @keyframes shimmer {
+          0% { left: -100%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 interface EditorPageProps {
   onClose: () => void;
@@ -155,10 +202,55 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
         minHeight: '100vh',
         padding: '16px',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flexDirection: 'column',
       }}>
-        <Spinner size="l" />
+        {/* Section 1: Header with Buttons Skeleton */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+          <Skeleton width="40px" height="40px" borderRadius="12px" delay={0} />
+          <Skeleton width="40px" height="40px" borderRadius="12px" delay={0.04} />
+        </div>
+
+        {/* Section 2: Amount and Store Name Card Skeleton */}
+        <Card style={{
+          backgroundColor: 'var(--tgui--bg_color)',
+          borderRadius: '12px',
+          margin: '0 0 24px 0',
+          padding: '40px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+        }}>
+          {/* Amount Input Skeleton */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            gap: '4px',
+            marginRight: '-24px',
+          }}>
+            <div style={{ paddingBottom: '6px' }}>
+              <Skeleton width="60px" height="28px" borderRadius="4px" delay={0.08} />
+            </div>
+            <Skeleton width="140px" height="44px" borderRadius="4px" delay={0.12} />
+          </div>
+
+          {/* Store Name Input Skeleton */}
+          <Skeleton width="240px" height="48px" borderRadius="12px" delay={0.16} />
+        </Card>
+
+        {/* Section 3: Category Select Skeleton */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <Skeleton width="100%" height="48px" borderRadius="12px" delay={0.2} />
+        </div>
       </div>
     );
   }
