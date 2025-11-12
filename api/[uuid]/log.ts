@@ -134,20 +134,39 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     // GPT-5 uses output_text in the response
     let extractedMessage: string | null = null;
     
+    // Helper function to safely extract string from value
+    const extractString = (value: any): string | null => {
+      if (typeof value === 'string') {
+        return value.trim();
+      } else if (value && typeof value === 'object') {
+        // If it's an object, try to find a text property
+        if (value.text && typeof value.text === 'string') {
+          return value.text.trim();
+        } else if (value.content && typeof value.content === 'string') {
+          return value.content.trim();
+        }
+      }
+      return null;
+    };
+    
     if (openaiData.output_text) {
-      extractedMessage = openaiData.output_text.trim();
-      console.log('✅ Found content in output_text');
-    } else if (openaiData.text) {
-      extractedMessage = openaiData.text.trim();
-      console.log('✅ Found content in text');
-    } else if (openaiData.content) {
-      extractedMessage = openaiData.content.trim();
-      console.log('✅ Found content in content');
-    } else if (openaiData.output) {
-      extractedMessage = typeof openaiData.output === 'string' 
-        ? openaiData.output.trim() 
-        : openaiData.output.text?.trim() || null;
-      console.log('✅ Found content in output');
+      extractedMessage = extractString(openaiData.output_text);
+      if (extractedMessage) console.log('✅ Found content in output_text');
+    }
+    
+    if (!extractedMessage && openaiData.text) {
+      extractedMessage = extractString(openaiData.text);
+      if (extractedMessage) console.log('✅ Found content in text');
+    }
+    
+    if (!extractedMessage && openaiData.content) {
+      extractedMessage = extractString(openaiData.content);
+      if (extractedMessage) console.log('✅ Found content in content');
+    }
+    
+    if (!extractedMessage && openaiData.output) {
+      extractedMessage = extractString(openaiData.output);
+      if (extractedMessage) console.log('✅ Found content in output');
     }
 
     if (!extractedMessage || extractedMessage.length === 0) {
