@@ -249,7 +249,7 @@ Now generate the analysis message following all the rules above.`;
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5',
+        model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000,
         temperature: 0.7,
@@ -259,8 +259,18 @@ Now generate the analysis message following all the rules above.`;
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
       console.error('OpenAI API error:', openaiResponse.status, errorText);
+      let errorMessage = 'Failed to generate analysis';
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+          errorMessage = errorJson.error.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the raw error text
+        errorMessage = errorText.substring(0, 200); // Limit length
+      }
       return res.status(502).json({
-        error: 'Failed to generate analysis',
+        error: errorMessage,
         details: errorText,
       });
     }

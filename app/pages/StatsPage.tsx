@@ -273,7 +273,9 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to generate analysis');
+        const errorMessage = error.error || error.details || 'Failed to generate analysis';
+        console.error('Analysis API error:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       await response.json();
@@ -282,7 +284,8 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
       alert('Analysis sent to your Telegram chat! 📊');
     } catch (error) {
       console.error('Error analyzing:', error);
-      alert('Failed to generate analysis. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate analysis. Please try again.';
+      alert(errorMessage);
     } finally {
       setAnalyzing(false);
     }
