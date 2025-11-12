@@ -17,9 +17,10 @@ import type { User } from '../lib/supabase';
 
 interface SettingsPageProps {
   user?: User | null;
+  onUserUpdate?: (user: User) => void;
 }
 
-const SettingsPage = ({ user }: SettingsPageProps) => {
+const SettingsPage = ({ user, onUserUpdate }: SettingsPageProps) => {
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(user?.default_currency || 'USD');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -71,6 +72,12 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
     
     if (result) {
       console.log('✅ Currency updated successfully');
+      
+      // Update user state in parent component (App.tsx)
+      if (onUserUpdate) {
+        onUserUpdate(result);
+      }
+      
       // Close modal after short delay
       setTimeout(() => {
         setIsCurrencyModalOpen(false);
@@ -97,7 +104,7 @@ const SettingsPage = ({ user }: SettingsPageProps) => {
         paddingRight: '44px',
       }}>
         <Avatar
-          size={104}
+          size={104 as any}
           src={user?.photo_url || undefined}
           acronym={getUserInitials()}
         />

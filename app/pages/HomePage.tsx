@@ -5,6 +5,7 @@ import { Button } from '../../src/components/Blocks/Button/Button';
 import { Section } from '../../src/components/Blocks/Section/Section';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
+import { Spinner } from '../../src/components/Feedback/Spinner/Spinner';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
@@ -95,6 +96,13 @@ const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [userCurrency, setUserCurrency] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
+
+  // Update userCurrency when user changes
+  useEffect(() => {
+    if (user?.default_currency) {
+      setUserCurrency(user.default_currency);
+    }
+  }, [user?.default_currency]);
 
   // Fetch spendings and categories when period or user changes
   useEffect(() => {
@@ -262,7 +270,7 @@ const HomePage = ({ onOpenEditor, user }: HomePageProps) => {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
-        <Text>Loading...</Text>
+        <Spinner size="l" />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AppRoot } from '../src/components/Service/AppRoot/AppRoot';
 import { Tabbar } from '../src/components/Layout/Tabbar/Tabbar';
+import { Spinner } from '../src/components/Feedback/Spinner/Spinner';
 import { Icon28Addhome } from '../src/icons/28/addhome';
 import { Icon28Archive } from '../src/icons/28/archive';
 import { Icon28Stats } from '../src/icons/28/stats';
@@ -139,9 +140,7 @@ function App() {
           height: '100vh',
           backgroundColor: 'var(--tgui--secondary_bg_color)',
         }}>
-          <div style={{ textAlign: 'center' }}>
-            <p>Loading...</p>
-          </div>
+          <Spinner size="l" />
         </div>
       </AppRoot>
     );
@@ -181,11 +180,20 @@ function App() {
     );
   }
 
+  // Callback to update user state (used by SettingsPage)
+  const handleUserUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   return (
     <AppRoot /* platform="ios" - Uncomment for development iOS testing */>
       <div className="page-container">
         {needsUser ? (
-          <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} user={user} />
+          <CurrentPage 
+            onOpenEditor={() => setIsEditorOpen(true)} 
+            user={user}
+            onUserUpdate={handleUserUpdate}
+          />
         ) : (
           <CurrentPage onOpenEditor={() => setIsEditorOpen(true)} />
         )}
