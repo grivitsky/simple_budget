@@ -242,7 +242,7 @@ Now generate the analysis message following all the rules above.`;
 
     console.log('🤖 Calling OpenAI API for analysis...');
 
-    // GPT-5 uses the new responses API format
+    // GPT-5 uses the responses API
     const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -252,8 +252,6 @@ Now generate the analysis message following all the rules above.`;
       body: JSON.stringify({
         model: 'gpt-5',
         input: prompt,
-        reasoning: { effort: 'high' }, // High effort for comprehensive analysis
-        text: { verbosity: 'medium' }, // Medium verbosity for detailed analysis
       }),
     });
 
@@ -279,23 +277,36 @@ Now generate the analysis message following all the rules above.`;
     const openaiData = await openaiResponse.json();
     console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
     
-    // GPT-5 uses output_text in the response
+    // GPT-5 responses API format: output[0].content[0].text
     let analysis: string | null = null;
     
-    if (openaiData.output_text) {
-      analysis = openaiData.output_text.trim();
-      console.log('✅ Found analysis in output_text');
-    } else if (openaiData.text) {
-      analysis = openaiData.text.trim();
-      console.log('✅ Found analysis in text');
-    } else if (openaiData.content) {
-      analysis = openaiData.content.trim();
-      console.log('✅ Found analysis in content');
-    } else if (openaiData.output) {
-      analysis = typeof openaiData.output === 'string' 
-        ? openaiData.output.trim() 
-        : openaiData.output.text?.trim() || null;
-      console.log('✅ Found analysis in output');
+    if (openaiData.output && Array.isArray(openaiData.output) && openaiData.output.length > 0) {
+      const firstOutput = openaiData.output[0];
+      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
+        const firstContent = firstOutput.content[0];
+        if (firstContent.type === 'output_text' && firstContent.text) {
+          analysis = firstContent.text.trim();
+          console.log('✅ Found analysis in output[0].content[0].text');
+        } else {
+          console.log('⚠️ Content structure:', {
+            type: firstContent.type,
+            hasText: !!firstContent.text,
+            contentKeys: Object.keys(firstContent),
+          });
+        }
+      } else {
+        console.log('⚠️ Output structure:', {
+          hasContent: !!firstOutput.content,
+          contentType: Array.isArray(firstOutput.content) ? 'array' : typeof firstOutput.content,
+          outputKeys: Object.keys(firstOutput),
+        });
+      }
+    } else {
+      console.log('⚠️ Response structure:', {
+        hasOutput: !!openaiData.output,
+        outputType: Array.isArray(openaiData.output) ? 'array' : typeof openaiData.output,
+        responseKeys: Object.keys(openaiData),
+      });
     }
 
     if (!analysis || analysis.length === 0) {

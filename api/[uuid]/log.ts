@@ -104,7 +104,7 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
 
     console.log('🤖 Calling OpenAI API...');
     
-    // GPT-5-nano uses the new responses API format
+    // GPT-5-nano uses the responses API
     const openaiResponse = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -114,8 +114,6 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
       body: JSON.stringify({
         model: 'gpt-5-nano', // Optimized for speed and real-time SMS analysis
         input: `You are a helpful accountant assistant that extracts transaction information from SMS messages. Always return only the transaction in the specified format, nothing else.\n\n${openaiPrompt}`,
-        reasoning: { effort: 'low' }, // Low effort for fast responses
-        text: { verbosity: 'low' }, // Low verbosity for concise output
       }),
     });
 
@@ -131,42 +129,36 @@ Transaction (return ONLY the transaction, no explanation, no additional text):`;
     const openaiData = await openaiResponse.json();
     console.log('📦 OpenAI response structure:', JSON.stringify(openaiData, null, 2));
     
-    // GPT-5 uses output_text in the response
+    // GPT-5 responses API format: output[0].content[0].text
     let extractedMessage: string | null = null;
     
-    // Helper function to safely extract string from value
-    const extractString = (value: any): string | null => {
-      if (typeof value === 'string') {
-        return value.trim();
-      } else if (value && typeof value === 'object') {
-        // If it's an object, try to find a text property
-        if (value.text && typeof value.text === 'string') {
-          return value.text.trim();
-        } else if (value.content && typeof value.content === 'string') {
-          return value.content.trim();
+    if (openaiData.output && Array.isArray(openaiData.output) && openaiData.output.length > 0) {
+      const firstOutput = openaiData.output[0];
+      if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {
+        const firstContent = firstOutput.content[0];
+        if (firstContent.type === 'output_text' && firstContent.text) {
+          extractedMessage = firstContent.text.trim();
+          console.log('✅ Found content in output[0].content[0].text');
+        } else {
+          console.log('⚠️ Content structure:', {
+            type: firstContent.type,
+            hasText: !!firstContent.text,
+            contentKeys: Object.keys(firstContent),
+          });
         }
+      } else {
+        console.log('⚠️ Output structure:', {
+          hasContent: !!firstOutput.content,
+          contentType: Array.isArray(firstOutput.content) ? 'array' : typeof firstOutput.content,
+          outputKeys: Object.keys(firstOutput),
+        });
       }
-      return null;
-    };
-    
-    if (openaiData.output_text) {
-      extractedMessage = extractString(openaiData.output_text);
-      if (extractedMessage) console.log('✅ Found content in output_text');
-    }
-    
-    if (!extractedMessage && openaiData.text) {
-      extractedMessage = extractString(openaiData.text);
-      if (extractedMessage) console.log('✅ Found content in text');
-    }
-    
-    if (!extractedMessage && openaiData.content) {
-      extractedMessage = extractString(openaiData.content);
-      if (extractedMessage) console.log('✅ Found content in content');
-    }
-    
-    if (!extractedMessage && openaiData.output) {
-      extractedMessage = extractString(openaiData.output);
-      if (extractedMessage) console.log('✅ Found content in output');
+    } else {
+      console.log('⚠️ Response structure:', {
+        hasOutput: !!openaiData.output,
+        outputType: Array.isArray(openaiData.output) ? 'array' : typeof openaiData.output,
+        responseKeys: Object.keys(openaiData),
+      });
     }
 
     if (!extractedMessage || extractedMessage.length === 0) {
