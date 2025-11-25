@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { getCurrencyByCode } from './currencyService';
-import { matchEarningsCategoryByName, getUndefinedEarningsCategory } from './earningsCategoryService';
+import { matchEarningsCategoryByName, getUndefinedEarningsCategory, getAllEarningsCategories } from './earningsCategoryService';
 import type { User } from './supabase';
 
 export interface Earning {
@@ -170,13 +170,57 @@ export async function createEarningFromMessage(
     const amountInBaseCurrency = parsed.amount / exchangeRate;
 
     // Match category (always returns Undefined category as default)
-    const category = await matchEarningsCategoryByName(parsed.earningName);
-    // Ensure we always have a category ID - fallback to Undefined if null
-    let categoryId = category?.id || null;
+    // We MUST always have a category ID - never leave it as null
+    let categoryId: string | null = null;
+    
+    try {
+      // Try to get category from matching function
+      const category = await matchEarningsCategoryByName(parsed.earningName);
+      categoryId = category?.id || null;
+      
+      // If still null, try direct lookup
+      if (!categoryId) {
+        const undefinedCategory = await getUndefinedEarningsCategory();
+        categoryId = undefinedCategory?.id || null;
+      }
+      
+      // If still null, try getting all categories and finding Undefined
+      if (!categoryId) {
+        console.warn('⚠️ Could not get Undefined category by name, trying all categories...');
+        const allCategories = await getAllEarningsCategories();
+        const undefinedCategory = allCategories.find(cat => 
+          cat.name.toLowerCase() === 'undefined'
+        );
+        categoryId = undefinedCategory?.id || null;
+      }
+      
+      // If STILL null, query database directly as last resort
+      if (!categoryId) {
+        console.warn('⚠️ Could not get Undefined category from service, querying database directly...');
+        const { data: directCategory, error: directError } = await supabase
+          .from('earnings_categories')
+          .select('id')
+          .eq('name', 'Undefined')
+          .single();
+        
+        if (!directError && directCategory) {
+          categoryId = directCategory.id;
+          console.log('✅ Found Undefined category via direct query:', categoryId);
+        } else {
+          console.error('❌ Could not find Undefined earnings category in database. Error:', directError);
+          console.error('❌ Please ensure the earnings_categories table has an "Undefined" category.');
+        }
+      } else {
+        console.log('✅ Category ID for earning:', categoryId);
+      }
+    } catch (error) {
+      console.error('❌ Error getting category:', error);
+    }
+    
+    // Final check: if we still don't have a category ID, log a warning
+    // The database trigger should handle it, but we prefer to set it in code
     if (!categoryId) {
-      // Fallback: get Undefined category directly
-      const undefinedCategory = await getUndefinedEarningsCategory();
-      categoryId = undefinedCategory?.id || null;
+      console.warn('⚠️ Proceeding with NULL category_id - database trigger should set it to Undefined');
     }
 
     // Create earning entry
