@@ -228,7 +228,20 @@ interface DailyTransaction {
 
 const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
-  const [viewType, setViewType] = useState<'expenses' | 'income'>('expenses');
+  
+  // Persist viewType in localStorage so it survives refreshes
+  const getInitialViewType = (): 'expenses' | 'income' => {
+    const saved = localStorage.getItem('statsViewType');
+    return (saved === 'expenses' || saved === 'income') ? saved : 'expenses';
+  };
+  
+  const [viewType, setViewType] = useState<'expenses' | 'income'>(getInitialViewType());
+  
+  // Update localStorage when viewType changes
+  const handleViewTypeChange = (newViewType: 'expenses' | 'income') => {
+    setViewType(newViewType);
+    localStorage.setItem('statsViewType', newViewType);
+  };
   // categoryStats contains all converted transactions and percentages - stored for later use
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -839,14 +852,14 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         <SegmentedControl>
           <SegmentedControl.Item
             selected={viewType === 'expenses'}
-            onClick={() => setViewType('expenses')}
+            onClick={() => handleViewTypeChange('expenses')}
             style={{ paddingTop: '12px', paddingBottom: '12px' }}
           >
             Expenses
           </SegmentedControl.Item>
           <SegmentedControl.Item
             selected={viewType === 'income'}
-            onClick={() => setViewType('income')}
+            onClick={() => handleViewTypeChange('income')}
             style={{ paddingTop: '12px', paddingBottom: '12px' }}
           >
             Income
