@@ -224,21 +224,33 @@ export async function createEarningFromMessage(
     }
 
     // Create earning entry
+    // Note: If categoryId is still null here, the database trigger should set it
+    // But we prefer to set it in code to avoid relying on triggers
     const earningData: EarningInsert = {
       user_id: user.id,
       earning_name: parsed.earningName,
-      category_id: categoryId,
+      category_id: categoryId, // May be null - trigger will handle it
       earning_amount: parsed.amount,
       currency_code: currencyCode,
       exchange_rate: exchangeRate,
       amount_in_base_currency: parseFloat(amountInBaseCurrency.toFixed(2)),
     };
 
+    console.log('💾 Inserting earning with category_id:', categoryId || 'NULL (trigger should set default)');
+    
     const { data: createdEarning, error: createError } = await supabase
       .from('earnings')
       .insert([earningData])
       .select()
       .single();
+    
+    // After insert, verify the category was set
+    if (createdEarning) {
+      console.log('✅ Earning created with category_id:', createdEarning.category_id || 'NULL');
+      if (!createdEarning.category_id) {
+        console.warn('⚠️ WARNING: Earning was created with NULL category_id. Trigger may have failed or Undefined category does not exist.');
+      }
+    }
 
     if (createError) {
       console.error('Error creating earning:', createError);
