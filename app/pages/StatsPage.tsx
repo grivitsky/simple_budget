@@ -809,19 +809,19 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
       </div>
 
       {/* Segmented Control for Expenses/Income */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '8px' }}>
         <SegmentedControl>
           <SegmentedControl.Item
             selected={viewType === 'expenses'}
             onClick={() => setViewType('expenses')}
-            style={{ paddingTop: '8px', paddingBottom: '8px' }}
+            style={{ paddingTop: '8px', paddingBottom: '12px' }}
           >
             Expenses
           </SegmentedControl.Item>
           <SegmentedControl.Item
             selected={viewType === 'income'}
             onClick={() => setViewType('income')}
-            style={{ paddingTop: '8px', paddingBottom: '8px' }}
+            style={{ paddingTop: '8px', paddingBottom: '12px' }}
           >
             Income
           </SegmentedControl.Item>
