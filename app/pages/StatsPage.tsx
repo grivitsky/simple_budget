@@ -271,8 +271,12 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         // Fetch both spendings and earnings for period
         const spendingsData = await getUserSpendingsByDateRange(user.id, startDate, endDate);
         setSpendingsData(spendingsData);
+        console.log('📊 Fetched spendings:', spendingsData.length, 'items');
+        
         const earningsData = await getUserEarningsByDateRange(user.id, startDate, endDate);
         setEarningsData(earningsData);
+        console.log('💰 Fetched earnings:', earningsData.length, 'items');
+        console.log('💰 Earnings data:', earningsData);
 
         // Get user's currency exchange rate
         const userCurrencyData = await getCurrencyByCode(defaultCurrency);
@@ -333,30 +337,50 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           setCategoryStats(stats);
         } else {
           // Calculate income statistics by category
+          console.log('💰 Calculating income stats for', earningsData.length, 'earnings');
           const categoryMap = new Map<string, { category: EarningsCategory; total: number }>();
 
           // Convert all earnings to user's currency and group by category
           for (const earning of earningsData) {
+            console.log('💰 Processing earning:', earning.earning_name, 'amount:', earning.earning_amount, 'currency:', earning.currency_code);
             const convertedAmount = await convertEarningToUserCurrency(
               earning,
               defaultCurrency,
               userCurrencyRate
             );
 
-            const categoryId = earning.category_id || 'undefined';
-            const category = earningsCats.find(cat => cat.id === categoryId) || 
-                            earningsCats.find(cat => cat.name === 'Undefined');
+            // Find category - if category_id is null, find "Undefined" category
+            let category: EarningsCategory | undefined;
+            if (earning.category_id) {
+              category = earningsCats.find(cat => cat.id === earning.category_id);
+            }
+            
+            // If not found or category_id is null, use "Undefined"
+            if (!category) {
+              category = earningsCats.find(cat => cat.name === 'Undefined');
+            }
+
+            console.log('💰 Earning category lookup:', {
+              earningName: earning.earning_name,
+              categoryId: earning.category_id,
+              foundCategory: category ? category.name : 'NOT FOUND',
+              availableCategories: earningsCats.map(c => c.name).join(', ')
+            });
 
             if (category) {
-              const existing = categoryMap.get(categoryId);
+              // Use the actual category ID (or "undefined" if null) as the map key
+              const mapKey = category.id;
+              const existing = categoryMap.get(mapKey);
               if (existing) {
                 existing.total += convertedAmount;
               } else {
-                categoryMap.set(categoryId, {
+                categoryMap.set(mapKey, {
                   category,
                   total: convertedAmount,
                 });
               }
+            } else {
+              console.warn('⚠️ Could not find category for earning:', earning.earning_name, 'category_id:', earning.category_id);
             }
           }
 
@@ -365,6 +389,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           for (const { total: catTotal } of categoryMap.values()) {
             total += catTotal;
           }
+          console.log('💰 Income total calculated:', total, 'from', categoryMap.size, 'categories');
           setTotalAmount(total);
 
           // Convert to array and calculate percentages
@@ -382,6 +407,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
             }))
             .sort((a, b) => b.amount - a.amount);
 
+          console.log('💰 Income category stats:', stats.length, 'categories', stats.map(s => `${s.categoryName}: ${s.amount}`).join(', '));
           setCategoryStats(stats);
         }
       } catch (error) {
