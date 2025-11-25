@@ -638,3 +638,29 @@ export function formatSpendingConfirmation(
   return `${transactionLine}\n\n${italicQuote}`;
 }
 
+/**
+ * Format earning confirmation message
+ * Returns message with quote in italic (Telegram markdown format)
+ */
+export function formatEarningConfirmation(
+  amount: number,
+  currency: string,
+  earningName: string,
+  userName: string
+): string {
+  const transactionLine = `+${amount} ${currency} - ${earningName}`;
+  const quote = getRandomQuote(userName);
+  // Escape markdown special characters in quote to prevent formatting issues
+  // Escape underscores (used for italic), asterisks, brackets, etc.
+  const escapedQuote = quote
+    .replace(/_/g, '\\_')      // Escape underscores
+    .replace(/\*/g, '\\*')     // Escape asterisks
+    .replace(/\[/g, '\\[')      // Escape opening brackets
+    .replace(/\]/g, '\\]')     // Escape closing brackets
+    .replace(/\(/g, '\\(')     // Escape opening parentheses
+    .replace(/\)/g, '\\)');    // Escape closing parentheses
+  // Make quote italic using Telegram markdown
+  const italicQuote = `_${escapedQuote}_`;
+  return `${transactionLine}\n\n${italicQuote}`;
+}
+
