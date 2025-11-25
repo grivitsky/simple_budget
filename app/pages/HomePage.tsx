@@ -120,7 +120,7 @@ async function convertToUserCurrency(
 }
 
 interface HomePageProps {
-  onOpenEditor?: (spendingId: string) => void;
+  onOpenEditor?: (spendingId?: string, earningId?: string) => void;
   user?: User | null;
   refreshTrigger?: number;
 }
@@ -569,7 +569,7 @@ const HomePage = ({ onOpenEditor, user, refreshTrigger }: HomePageProps) => {
             {day.transactions.map((transaction, transactionIndex) => (
               <Cell
                 key={transactionIndex}
-                onClick={() => onOpenEditor?.(transaction.id)}
+                onClick={() => onOpenEditor?.(transaction.id, undefined)}
                 style={{
                   backgroundColor: 'var(--tgui--secondary_bg_color)',
                 }}

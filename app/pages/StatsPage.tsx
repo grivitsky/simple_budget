@@ -209,7 +209,7 @@ interface CategoryStats {
 interface StatsPageProps {
   user?: User | null;
   refreshTrigger?: number;
-  onOpenEditor?: (spendingId?: string) => void;
+  onOpenEditor?: (spendingId?: string, earningId?: string) => void;
 }
 
 interface DailyTransaction {
@@ -1041,7 +1041,12 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
                       key={transactionIndex}
                       onClick={() => {
                         setIsCategoryModalOpen(false);
-                        onOpenEditor?.(transaction.id);
+                        // Pass the correct ID based on viewType
+                        if (viewType === 'expenses') {
+                          onOpenEditor?.(transaction.id, undefined);
+                        } else {
+                          onOpenEditor?.(undefined, transaction.id);
+                        }
                       }}
                       style={{
                         backgroundColor: 'var(--tgui--secondary_bg_color)',

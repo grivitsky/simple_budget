@@ -82,6 +82,7 @@ function App() {
   const [currentTab, setCurrentTab] = useState<TabId>('home');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorSpendingId, setEditorSpendingId] = useState<string | null>(null);
+  const [editorEarningId, setEditorEarningId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -180,8 +181,10 @@ function App() {
             onClose={() => {
               setIsEditorOpen(false);
               setEditorSpendingId(null);
+              setEditorEarningId(null);
             }}
             spendingId={editorSpendingId}
+            earningId={editorEarningId}
             user={user}
             onSave={() => {
               // Trigger refresh of HomePage data
@@ -207,8 +210,9 @@ function App() {
       <div className="page-container">
         {needsUser ? (
           <CurrentPage 
-            onOpenEditor={(spendingId?: string) => {
+            onOpenEditor={(spendingId?: string, earningId?: string) => {
               setEditorSpendingId(spendingId || null);
+              setEditorEarningId(earningId || null);
               setIsEditorOpen(true);
             }} 
             user={user}

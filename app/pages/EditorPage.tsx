@@ -7,7 +7,9 @@ import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon28Check } from '../../src/icons/28/check';
 import { Icon28Bin } from '../../src/icons/28/bin';
 import { updateSpending, deleteSpending, getSpendingById, type Spending } from '../lib/spendingService';
+import { updateEarning, deleteEarning, getEarningById, type Earning } from '../lib/earningsService';
 import { getAllCategories, type Category } from '../lib/categoryService';
+import { getAllEarningsCategories, type EarningsCategory } from '../lib/earningsCategoryService';
 import type { User } from '../lib/supabase';
 
 // Skeleton Component
@@ -61,53 +63,75 @@ const Skeleton = ({
 interface EditorPageProps {
   onClose: () => void;
   spendingId?: string | null;
+  earningId?: string | null;
   user?: User | null;
   onSave?: () => void;
   onDelete?: () => void;
 }
 
-const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageProps) => {
+const EditorPage = ({ onClose, spendingId, earningId, user, onSave, onDelete }: EditorPageProps) => {
   const [spending, setSpending] = useState<Spending | null>(null);
+  const [earning, setEarning] = useState<Earning | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [earningsCategories, setEarningsCategories] = useState<EarningsCategory[]>([]);
   const [amount, setAmount] = useState('');
   const [storeName, setStoreName] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  const isEarning = !!earningId;
+  const transaction = spending || earning;
 
-  // Load spending and categories
+  // Load transaction and categories
   useEffect(() => {
     const loadData = async () => {
-      if (!spendingId) {
+      if (!spendingId && !earningId) {
         setLoading(false);
         return;
       }
 
       setLoading(true);
       try {
-        // Load categories
-        const cats = await getAllCategories();
-        setCategories(cats);
+        if (earningId) {
+          // Load earnings categories
+          const earningsCats = await getAllEarningsCategories();
+          setEarningsCategories(earningsCats);
 
-        // Load spending
-        const spendingData = await getSpendingById(spendingId);
-        if (spendingData) {
-          setSpending(spendingData);
-          setAmount(spendingData.spending_amount.toString());
-          setStoreName(spendingData.spending_name);
-          setSelectedCategoryId(spendingData.category_id);
-          setCurrencyCode(spendingData.currency_code);
+          // Load earning
+          const earningData = await getEarningById(earningId);
+          if (earningData) {
+            setEarning(earningData);
+            setAmount(earningData.earning_amount.toString());
+            setStoreName(earningData.earning_name);
+            setSelectedCategoryId(earningData.category_id);
+            setCurrencyCode(earningData.currency_code);
+          }
+        } else if (spendingId) {
+          // Load categories
+          const cats = await getAllCategories();
+          setCategories(cats);
+
+          // Load spending
+          const spendingData = await getSpendingById(spendingId);
+          if (spendingData) {
+            setSpending(spendingData);
+            setAmount(spendingData.spending_amount.toString());
+            setStoreName(spendingData.spending_name);
+            setSelectedCategoryId(spendingData.category_id);
+            setCurrencyCode(spendingData.currency_code);
+          }
         }
       } catch (error) {
-        console.error('Error loading spending data:', error);
+        console.error('Error loading transaction data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [spendingId]);
+  }, [spendingId, earningId]);
 
   // Handle amount input - allow only numbers, comma, and period
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +144,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
 
   // Handle save
   const handleSave = async () => {
-    if (!spending || !user) return;
+    if (!transaction || !user) return;
 
     setSaving(true);
     try {
@@ -132,39 +156,73 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
         return;
       }
 
-      // Use existing exchange rate (currency is not editable)
-      const exchangeRate = spending.exchange_rate;
-      
-      // Recalculate amount in base currency if amount changed
-      let amountInBaseCurrency = spending.amount_in_base_currency;
-      if (amountValue !== spending.spending_amount) {
-        // Recalculate: new_amount / exchange_rate = new_amount_in_base_currency
-        amountInBaseCurrency = amountValue / exchangeRate;
-      }
-
-      // Update spending
-      const updated = await updateSpending(spending.id, {
-        spending_name: storeName.trim(),
-        spending_amount: amountValue,
-        category_id: selectedCategoryId,
-        amount_in_base_currency: parseFloat(amountInBaseCurrency.toFixed(2)),
-      });
-
-      if (updated) {
-        // Haptic feedback for success
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
+      if (isEarning && earning) {
+        // Use existing exchange rate (currency is not editable)
+        const exchangeRate = earning.exchange_rate;
         
-        if (onSave) {
-          onSave();
+        // Recalculate amount in base currency if amount changed
+        let amountInBaseCurrency = earning.amount_in_base_currency;
+        if (amountValue !== earning.earning_amount) {
+          // Recalculate: new_amount / exchange_rate = new_amount_in_base_currency
+          amountInBaseCurrency = amountValue / exchangeRate;
         }
-        onClose();
-      } else {
-        alert('Failed to save changes');
+
+        // Update earning
+        const updated = await updateEarning(earning.id, {
+          earning_name: storeName.trim(),
+          earning_amount: amountValue,
+          category_id: selectedCategoryId,
+          amount_in_base_currency: parseFloat(amountInBaseCurrency.toFixed(2)),
+        });
+
+        if (updated) {
+          // Haptic feedback for success
+          if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          }
+          
+          if (onSave) {
+            onSave();
+          }
+          onClose();
+        } else {
+          alert('Failed to save changes');
+        }
+      } else if (!isEarning && spending) {
+        // Use existing exchange rate (currency is not editable)
+        const exchangeRate = spending.exchange_rate;
+        
+        // Recalculate amount in base currency if amount changed
+        let amountInBaseCurrency = spending.amount_in_base_currency;
+        if (amountValue !== spending.spending_amount) {
+          // Recalculate: new_amount / exchange_rate = new_amount_in_base_currency
+          amountInBaseCurrency = amountValue / exchangeRate;
+        }
+
+        // Update spending
+        const updated = await updateSpending(spending.id, {
+          spending_name: storeName.trim(),
+          spending_amount: amountValue,
+          category_id: selectedCategoryId,
+          amount_in_base_currency: parseFloat(amountInBaseCurrency.toFixed(2)),
+        });
+
+        if (updated) {
+          // Haptic feedback for success
+          if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          }
+          
+          if (onSave) {
+            onSave();
+          }
+          onClose();
+        } else {
+          alert('Failed to save changes');
+        }
       }
     } catch (error) {
-      console.error('Error saving spending:', error);
+      console.error('Error saving transaction:', error);
       alert('Error saving changes');
     } finally {
       setSaving(false);
@@ -173,14 +231,20 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
 
   // Handle delete
   const handleDelete = async () => {
-    if (!spending) return;
+    if (!transaction) return;
 
     // Native confirmation dialog
     const confirmed = window.confirm('Are you sure you want to delete this transaction?');
     if (!confirmed) return;
 
     try {
-      const success = await deleteSpending(spending.id);
+      let success = false;
+      if (isEarning && earning) {
+        success = await deleteEarning(earning.id);
+      } else if (!isEarning && spending) {
+        success = await deleteSpending(spending.id);
+      }
+
       if (success) {
         if (onDelete) {
           onDelete();
@@ -190,7 +254,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
         alert('Failed to delete transaction');
       }
     } catch (error) {
-      console.error('Error deleting spending:', error);
+      console.error('Error deleting transaction:', error);
       alert('Error deleting transaction');
     }
   };
@@ -255,7 +319,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
     );
   }
 
-  if (!spending) {
+  if (!transaction) {
     return (
       <div style={{
         backgroundColor: 'var(--tgui--secondary_bg_color)',
@@ -334,7 +398,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
               color: 'var(--tgui--hint_color)',
               lineHeight: '1',
             }}>
-              -{currencyCode}
+              {isEarning ? '+' : '-'}{currencyCode}
             </span>
           </div>
           <input
@@ -387,7 +451,7 @@ const EditorPage = ({ onClose, spendingId, user, onSave, onDelete }: EditorPageP
           onChange={(e) => setSelectedCategoryId(e.target.value || null)}
           style={{ paddingTop: '14px', paddingBottom: '14px', width: '100%' }}
         >
-          {categories.map((category) => (
+          {(isEarning ? earningsCategories : categories).map((category) => (
             <option key={category.id} value={category.id}>
               {category.emoji} {category.name}
             </option>
