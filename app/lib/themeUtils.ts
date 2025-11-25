@@ -1,4 +1,5 @@
 import type { Category } from './categoryService';
+import type { EarningsCategory } from './earningsCategoryService';
 
 /**
  * Detect if Telegram WebApp is using dark theme
@@ -32,7 +33,7 @@ export function isDarkTheme(): boolean {
  * Get category color based on current theme
  * Returns dark color if theme is dark, otherwise returns regular color
  */
-export function getCategoryColor(category: Category): string {
+export function getCategoryColor(category: Category | EarningsCategory): string {
   const dark = isDarkTheme();
   if (dark && category.color_dark) {
     return category.color_dark;
@@ -44,7 +45,7 @@ export function getCategoryColor(category: Category): string {
  * Get category text color based on current theme
  * Returns dark text color if theme is dark, otherwise returns regular text color
  */
-export function getCategoryTextColor(category: Category): string {
+export function getCategoryTextColor(category: Category | EarningsCategory): string {
   const dark = isDarkTheme();
   if (dark && category.text_color_dark) {
     return category.text_color_dark;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../../src/components/Blocks/Button/Button';
 import { TabsList } from '../../src/components/Navigation/TabsList/TabsList';
+import { SegmentedControl } from '../../src/components/Navigation/SegmentedControl/SegmentedControl';
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { Icon24Guard } from '../../src/icons/24/guard';
@@ -10,8 +11,10 @@ import { Modal } from '../../src/components/Overlays/Modal/Modal';
 import { Section } from '../../src/components/Blocks/Section/Section';
 import { Subheadline } from '../../src/components/Typography/Subheadline/Subheadline';
 import { getUserSpendingsByDateRange, getPeriodStartDate, getPeriodEndDate, type Spending } from '../lib/spendingService';
+import { getUserEarningsByDateRange, type Earning } from '../lib/earningsService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getAllCategories, type Category } from '../lib/categoryService';
+import { getAllEarningsCategories, type EarningsCategory } from '../lib/earningsCategoryService';
 import { getCategoryColor, getCategoryTextColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
 
@@ -159,7 +162,7 @@ function formatTime(date: Date): string {
 }
 
 /**
- * Convert amount to user's default currency
+ * Convert amount to user's default currency (for spending)
  */
 async function convertToUserCurrency(
   spending: Spending,
@@ -173,6 +176,23 @@ async function convertToUserCurrency(
 
   // Otherwise, convert from base currency (USD) to user's default currency
   return spending.amount_in_base_currency * userCurrencyRate;
+}
+
+/**
+ * Convert amount to user's default currency (for earning)
+ */
+async function convertEarningToUserCurrency(
+  earning: Earning,
+  userDefaultCurrency: string,
+  userCurrencyRate: number
+): Promise<number> {
+  // If transaction currency matches user's default currency, return earning_amount
+  if (earning.currency_code === userDefaultCurrency) {
+    return earning.earning_amount;
+  }
+
+  // Otherwise, convert from base currency (USD) to user's default currency
+  return earning.amount_in_base_currency * userCurrencyRate;
 }
 
 interface CategoryStats {
@@ -208,20 +228,23 @@ interface DailyTransaction {
 
 const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [viewType, setViewType] = useState<'expenses' | 'income'>('expenses');
   // categoryStats contains all converted transactions and percentages - stored for later use
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [userCurrency, setUserCurrency] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
   const [spendingsData, setSpendingsData] = useState<Spending[]>([]);
+  const [earningsData, setEarningsData] = useState<Earning[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [earningsCategories, setEarningsCategories] = useState<EarningsCategory[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [categoryTransactions, setCategoryTransactions] = useState<DailyTransaction[]>([]);
   const [loadingCategoryTransactions, setLoadingCategoryTransactions] = useState(false);
 
-  // Fetch spendings and calculate statistics when period or user changes
+  // Fetch both expenses and income data when period or user changes
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) {
@@ -231,9 +254,11 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
 
       setLoading(true);
       try {
-        // Fetch categories
+        // Fetch both categories and earnings categories
         const cats = await getAllCategories();
         setCategories(cats);
+        const earningsCats = await getAllEarningsCategories();
+        setEarningsCategories(earningsCats);
 
         // Get user's default currency
         const defaultCurrency = user.default_currency || 'USD';
@@ -243,65 +268,122 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         const startDate = getPeriodStartDate(selectedPeriod);
         const endDate = getPeriodEndDate();
 
-        // Fetch spendings for period
+        // Fetch both spendings and earnings for period
         const spendingsData = await getUserSpendingsByDateRange(user.id, startDate, endDate);
         setSpendingsData(spendingsData);
+        const earningsData = await getUserEarningsByDateRange(user.id, startDate, endDate);
+        setEarningsData(earningsData);
 
         // Get user's currency exchange rate
         const userCurrencyData = await getCurrencyByCode(defaultCurrency);
         const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
 
-        // Calculate statistics by category
-        const categoryMap = new Map<string, { category: Category; total: number }>();
+        // Calculate statistics based on viewType
+        if (viewType === 'expenses') {
+          // Calculate expenses statistics by category
+          const categoryMap = new Map<string, { category: Category; total: number }>();
 
-        // Convert all spendings to user's currency and group by category
-        for (const spending of spendingsData) {
-          const convertedAmount = await convertToUserCurrency(
-            spending,
-            defaultCurrency,
-            userCurrencyRate
-          );
+          // Convert all spendings to user's currency and group by category
+          for (const spending of spendingsData) {
+            const convertedAmount = await convertToUserCurrency(
+              spending,
+              defaultCurrency,
+              userCurrencyRate
+            );
 
-          const categoryId = spending.category_id || 'undefined';
-          const category = cats.find(cat => cat.id === categoryId) || 
-                          cats.find(cat => cat.name === 'Undefined');
+            const categoryId = spending.category_id || 'undefined';
+            const category = cats.find(cat => cat.id === categoryId) || 
+                            cats.find(cat => cat.name === 'Undefined');
 
-          if (category) {
-            const existing = categoryMap.get(categoryId);
-            if (existing) {
-              existing.total += convertedAmount;
-            } else {
-              categoryMap.set(categoryId, {
-                category,
-                total: convertedAmount,
-              });
+            if (category) {
+              const existing = categoryMap.get(categoryId);
+              if (existing) {
+                existing.total += convertedAmount;
+              } else {
+                categoryMap.set(categoryId, {
+                  category,
+                  total: convertedAmount,
+                });
+              }
             }
           }
+
+          // Calculate total
+          let total = 0;
+          for (const { total: catTotal } of categoryMap.values()) {
+            total += catTotal;
+          }
+          setTotalAmount(total);
+
+          // Convert to array and calculate percentages
+          const timestamp = new Date().toISOString();
+          const stats: CategoryStats[] = Array.from(categoryMap.values())
+            .map(({ category, total: catTotal }) => ({
+              categoryId: category.id,
+              categoryName: category.name,
+              emoji: category.emoji,
+              color: getCategoryColor(category),
+              textColor: getCategoryTextColor(category),
+              amount: catTotal,
+              percentage: total > 0 ? (catTotal / total) * 100 : 0,
+              timestamp: timestamp,
+            }))
+            .sort((a, b) => b.amount - a.amount);
+
+          setCategoryStats(stats);
+        } else {
+          // Calculate income statistics by category
+          const categoryMap = new Map<string, { category: EarningsCategory; total: number }>();
+
+          // Convert all earnings to user's currency and group by category
+          for (const earning of earningsData) {
+            const convertedAmount = await convertEarningToUserCurrency(
+              earning,
+              defaultCurrency,
+              userCurrencyRate
+            );
+
+            const categoryId = earning.category_id || 'undefined';
+            const category = earningsCats.find(cat => cat.id === categoryId) || 
+                            earningsCats.find(cat => cat.name === 'Undefined');
+
+            if (category) {
+              const existing = categoryMap.get(categoryId);
+              if (existing) {
+                existing.total += convertedAmount;
+              } else {
+                categoryMap.set(categoryId, {
+                  category,
+                  total: convertedAmount,
+                });
+              }
+            }
+          }
+
+          // Calculate total
+          let total = 0;
+          for (const { total: catTotal } of categoryMap.values()) {
+            total += catTotal;
+          }
+          setTotalAmount(total);
+
+          // Convert to array and calculate percentages
+          const timestamp = new Date().toISOString();
+          const stats: CategoryStats[] = Array.from(categoryMap.values())
+            .map(({ category, total: catTotal }) => ({
+              categoryId: category.id,
+              categoryName: category.name,
+              emoji: category.emoji,
+              color: getCategoryColor(category),
+              textColor: getCategoryTextColor(category),
+              amount: catTotal,
+              percentage: total > 0 ? (catTotal / total) * 100 : 0,
+              timestamp: timestamp,
+            }))
+            .sort((a, b) => b.amount - a.amount);
+
+          setCategoryStats(stats);
         }
-
-        // Calculate total
-        let total = 0;
-        for (const { total: catTotal } of categoryMap.values()) {
-          total += catTotal;
-        }
-        setTotalAmount(total);
-
-        // Convert to array and calculate percentages
-        const timestamp = new Date().toISOString(); // Timestamp for when stats were calculated
-        const stats: CategoryStats[] = Array.from(categoryMap.values())
-          .map(({ category, total: catTotal }) => ({
-            categoryId: category.id,
-            categoryName: category.name,
-            emoji: category.emoji,
-            color: getCategoryColor(category),
-            textColor: getCategoryTextColor(category),
-            amount: catTotal,
-            percentage: total > 0 ? (catTotal / total) * 100 : 0,
-            timestamp: timestamp,
-          }))
-          .sort((a, b) => b.amount - a.amount); // Sort by amount descending
-
-        setCategoryStats(stats);
       } catch (error) {
         console.error('Error fetching stats data:', error);
       } finally {
@@ -310,7 +392,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
     };
 
     fetchData();
-  }, [selectedPeriod, user, refreshTrigger]);
+  }, [selectedPeriod, user, refreshTrigger, viewType]);
 
   // Handle category click - open modal and load transactions
   const handleCategoryClick = async (categoryId: string) => {
@@ -323,77 +405,151 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
       const userCurrencyData = await getCurrencyByCode(userCurrency);
       const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
 
-      // Filter spendings for this category
-      const categorySpendings = spendingsData.filter(
-        spending => spending.category_id === categoryId
-      );
-
-      // Get category info
-      const category = categories.find(cat => cat.id === categoryId);
-
-      // Group by day
-      const dayMap = new Map<string, Spending[]>();
-      
-      for (const spending of categorySpendings) {
-        const date = new Date(spending.created_at);
-        const dayKey = date.toDateString();
-        
-        if (!dayMap.has(dayKey)) {
-          dayMap.set(dayKey, []);
-        }
-        dayMap.get(dayKey)!.push(spending);
-      }
-
-      // Convert to daily transactions
-      const dailyTransactions: DailyTransaction[] = [];
-      
-      for (const [dayKey, daySpendings] of dayMap.entries()) {
-        const date = new Date(dayKey);
-        let dayTotal = 0;
-
-        const transactions = await Promise.all(
-          daySpendings.map(async (spending) => {
-            // Convert amount to user's currency
-            const convertedAmount = await convertToUserCurrency(
-              spending,
-              userCurrency,
-              userCurrencyRate
-            );
-            
-            dayTotal += convertedAmount;
-
-            return {
-              id: spending.id,
-              emoji: category?.emoji || '❔',
-              name: spending.spending_name,
-              time: formatTime(new Date(spending.created_at)),
-              amount: convertedAmount,
-              type: 'Spent',
-              color: category ? getCategoryColor(category) : '#9E9E9E',
-            };
-          })
+      if (viewType === 'expenses') {
+        // Filter spendings for this category
+        const categorySpendings = spendingsData.filter(
+          spending => spending.category_id === categoryId
         );
 
-        dailyTransactions.push({
-          date: formatDate(date),
-          total: dayTotal,
-          transactions: transactions.sort((a, b) => 
-            new Date(daySpendings.find(s => s.id === b.id)!.created_at).getTime() - 
-            new Date(daySpendings.find(s => s.id === a.id)!.created_at).getTime()
-          ),
+        // Get category info
+        const category = categories.find(cat => cat.id === categoryId);
+
+        // Group by day
+        const dayMap = new Map<string, Spending[]>();
+        
+        for (const spending of categorySpendings) {
+          const date = new Date(spending.created_at);
+          const dayKey = date.toDateString();
+          
+          if (!dayMap.has(dayKey)) {
+            dayMap.set(dayKey, []);
+          }
+          dayMap.get(dayKey)!.push(spending);
+        }
+
+        // Convert to daily transactions
+        const dailyTransactions: DailyTransaction[] = [];
+        
+        for (const [dayKey, daySpendings] of dayMap.entries()) {
+          const date = new Date(dayKey);
+          let dayTotal = 0;
+
+          const transactions = await Promise.all(
+            daySpendings.map(async (spending) => {
+              // Convert amount to user's currency
+              const convertedAmount = await convertToUserCurrency(
+                spending,
+                userCurrency,
+                userCurrencyRate
+              );
+              
+              dayTotal += convertedAmount;
+
+              return {
+                id: spending.id,
+                emoji: category?.emoji || '❔',
+                name: spending.spending_name,
+                time: formatTime(new Date(spending.created_at)),
+                amount: convertedAmount,
+                type: 'Spent',
+                color: category ? getCategoryColor(category) : '#9E9E9E',
+              };
+            })
+          );
+
+          dailyTransactions.push({
+            date: formatDate(date),
+            total: dayTotal,
+            transactions: transactions.sort((a, b) => 
+              new Date(daySpendings.find(s => s.id === b.id)!.created_at).getTime() - 
+              new Date(daySpendings.find(s => s.id === a.id)!.created_at).getTime()
+            ),
+          });
+        }
+
+        // Sort by date (newest first)
+        dailyTransactions.sort((a, b) => {
+          const dateA = new Date(a.transactions[0] ? 
+            categorySpendings.find(s => s.id === a.transactions[0].id)?.created_at || '' : '');
+          const dateB = new Date(b.transactions[0] ? 
+            categorySpendings.find(s => s.id === b.transactions[0].id)?.created_at || '' : '');
+          return dateB.getTime() - dateA.getTime();
         });
+
+        setCategoryTransactions(dailyTransactions);
+      } else {
+        // Filter earnings for this category
+        const categoryEarnings = earningsData.filter(
+          earning => earning.category_id === categoryId
+        );
+
+        // Get category info
+        const category = earningsCategories.find(cat => cat.id === categoryId);
+
+        // Group by day
+        const dayMap = new Map<string, Earning[]>();
+        
+        for (const earning of categoryEarnings) {
+          const date = new Date(earning.created_at);
+          const dayKey = date.toDateString();
+          
+          if (!dayMap.has(dayKey)) {
+            dayMap.set(dayKey, []);
+          }
+          dayMap.get(dayKey)!.push(earning);
+        }
+
+        // Convert to daily transactions
+        const dailyTransactions: DailyTransaction[] = [];
+        
+        for (const [dayKey, dayEarnings] of dayMap.entries()) {
+          const date = new Date(dayKey);
+          let dayTotal = 0;
+
+          const transactions = await Promise.all(
+            dayEarnings.map(async (earning) => {
+              // Convert amount to user's currency
+              const convertedAmount = await convertEarningToUserCurrency(
+                earning,
+                userCurrency,
+                userCurrencyRate
+              );
+              
+              dayTotal += convertedAmount;
+
+              return {
+                id: earning.id,
+                emoji: category?.emoji || '❔',
+                name: earning.earning_name,
+                time: formatTime(new Date(earning.created_at)),
+                amount: convertedAmount,
+                type: 'Earned',
+                color: category ? getCategoryColor(category) : '#9E9E9E',
+              };
+            })
+          );
+
+          dailyTransactions.push({
+            date: formatDate(date),
+            total: dayTotal,
+            transactions: transactions.sort((a, b) => 
+              new Date(dayEarnings.find(e => e.id === b.id)!.created_at).getTime() - 
+              new Date(dayEarnings.find(e => e.id === a.id)!.created_at).getTime()
+            ),
+          });
+        }
+
+        // Sort by date (newest first)
+        dailyTransactions.sort((a, b) => {
+          const dateA = new Date(a.transactions[0] ? 
+            categoryEarnings.find(e => e.id === a.transactions[0].id)?.created_at || '' : '');
+          const dateB = new Date(b.transactions[0] ? 
+            categoryEarnings.find(e => e.id === b.transactions[0].id)?.created_at || '' : '');
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setCategoryTransactions(dailyTransactions);
       }
-
-      // Sort by date (newest first)
-      dailyTransactions.sort((a, b) => {
-        const dateA = new Date(a.transactions[0] ? 
-          categorySpendings.find(s => s.id === a.transactions[0].id)?.created_at || '' : '');
-        const dateB = new Date(b.transactions[0] ? 
-          categorySpendings.find(s => s.id === b.transactions[0].id)?.created_at || '' : '');
-        return dateB.getTime() - dateA.getTime();
-      });
-
-      setCategoryTransactions(dailyTransactions);
     } catch (error) {
       console.error('Error loading category transactions:', error);
       setCategoryTransactions([]);
@@ -404,7 +560,8 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
 
   // Handle Analyze button click
   const handleAnalyze = async () => {
-    if (!user || spendingsData.length === 0 || categoryStats.length === 0) {
+    const dataToAnalyze = viewType === 'expenses' ? spendingsData : earningsData;
+    if (!user || dataToAnalyze.length === 0 || categoryStats.length === 0) {
       alert('No data available for analysis');
       return;
     }
@@ -417,28 +574,33 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
 
       // Format transactions for OpenAI
       const transactions = await Promise.all(
-        spendingsData.map(async (spending) => {
+        (viewType === 'expenses' ? spendingsData : earningsData).map(async (item) => {
           // Convert to user's currency
-          const convertedAmount = await convertToUserCurrency(
-            spending,
-            userCurrency,
-            userCurrencyRate
-          );
+          const convertedAmount = viewType === 'expenses'
+            ? await convertToUserCurrency(item as Spending, userCurrency, userCurrencyRate)
+            : await convertEarningToUserCurrency(item as Earning, userCurrency, userCurrencyRate);
 
           // Get category name
-          const category = categories.find(cat => cat.id === spending.category_id) ||
-                          categories.find(cat => cat.name === 'Undefined');
+          const category = viewType === 'expenses'
+            ? categories.find(cat => cat.id === (item as Spending).category_id) ||
+              categories.find(cat => cat.name === 'Undefined')
+            : earningsCategories.find(cat => cat.id === (item as Earning).category_id) ||
+              earningsCategories.find(cat => cat.name === 'Undefined');
 
           // Format date as YYYY-MM-DD
-          const date = new Date(spending.created_at);
+          const date = new Date(item.created_at);
           const dateStr = date.toISOString().split('T')[0];
 
           return {
             date: dateStr,
-            amount: -Math.abs(convertedAmount), // Negative for spending
+            amount: viewType === 'expenses' 
+              ? -Math.abs(convertedAmount) // Negative for spending
+              : Math.abs(convertedAmount), // Positive for income
             currency: userCurrency,
             category: category?.name || 'Undefined',
-            merchant: spending.spending_name,
+            merchant: viewType === 'expenses' 
+              ? (item as Spending).spending_name 
+              : (item as Earning).earning_name,
             notes: undefined,
             is_recurring: false, // We don't track this yet
           };
@@ -464,7 +626,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         body: JSON.stringify({
           transactions,
           categoryStats: categoryTotals,
-          totalSpent: totalAmount,
+          totalSpent: viewType === 'expenses' ? totalAmount : -totalAmount, // Negative for income analysis
           period: selectedPeriod,
           dateRange,
           userTelegramId: user.telegram_id,
@@ -630,7 +792,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
               color: 'var(--tgui--hint_color)',
               lineHeight: '1',
             }}>
-              -{userCurrency}
+              {viewType === 'expenses' ? '-' : '+'}{userCurrency}
             </span>
           </div>
           <span style={{
@@ -646,6 +808,24 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         </div>
       </div>
 
+      {/* Segmented Control for Expenses/Income */}
+      <div style={{ marginBottom: '16px' }}>
+        <SegmentedControl>
+          <SegmentedControl.Item
+            selected={viewType === 'expenses'}
+            onClick={() => setViewType('expenses')}
+          >
+            Expenses
+          </SegmentedControl.Item>
+          <SegmentedControl.Item
+            selected={viewType === 'income'}
+            onClick={() => setViewType('income')}
+          >
+            Income
+          </SegmentedControl.Item>
+        </SegmentedControl>
+      </div>
+
       {/* 1. Analyze Button */}
       <Button
         mode="bezeled"
@@ -654,7 +834,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         before={<Icon24Guard />}
         style={{ marginBottom: '24px' }}
         onClick={handleAnalyze}
-        disabled={analyzing || spendingsData.length === 0}
+        disabled={analyzing || (viewType === 'expenses' ? spendingsData.length === 0 : earningsData.length === 0)}
       >
         {analyzing ? 'Analyzing...' : 'Analyze'}
       </Button>
@@ -765,7 +945,9 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           <Modal.Header>
             {(() => {
               if (!selectedCategoryId) return 'Category Transactions';
-              const category = categories.find(cat => cat.id === selectedCategoryId);
+              const category = viewType === 'expenses'
+                ? categories.find(cat => cat.id === selectedCategoryId)
+                : earningsCategories.find(cat => cat.id === selectedCategoryId);
               return category ? `${category.emoji} ${category.name}` : 'Category Transactions';
             })()}
           </Modal.Header>
