@@ -189,6 +189,7 @@ interface CategoryStats {
 interface StatsPageProps {
   user?: User | null;
   refreshTrigger?: number;
+  onOpenEditor?: (spendingId?: string) => void;
 }
 
 interface DailyTransaction {
@@ -205,7 +206,7 @@ interface DailyTransaction {
   }>;
 }
 
-const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
+const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   // categoryStats contains all converted transactions and percentages - stored for later use
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
@@ -828,6 +829,10 @@ const StatsPage = ({ user, refreshTrigger }: StatsPageProps) => {
                   {day.transactions.map((transaction, transactionIndex) => (
                     <Cell
                       key={transactionIndex}
+                      onClick={() => {
+                        setIsCategoryModalOpen(false);
+                        onOpenEditor?.(transaction.id);
+                      }}
                       style={{
                         backgroundColor: 'var(--tgui--secondary_bg_color)',
                       }}
