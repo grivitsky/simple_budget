@@ -814,12 +814,14 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           <SegmentedControl.Item
             selected={viewType === 'expenses'}
             onClick={() => setViewType('expenses')}
+            style={{ paddingTop: '8px', paddingBottom: '8px' }}
           >
             Expenses
           </SegmentedControl.Item>
           <SegmentedControl.Item
             selected={viewType === 'income'}
             onClick={() => setViewType('income')}
+            style={{ paddingTop: '8px', paddingBottom: '8px' }}
           >
             Income
           </SegmentedControl.Item>
