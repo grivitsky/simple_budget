@@ -21,7 +21,9 @@ interface CategoryTotal {
 interface AnalyzeRequest {
   transactions: Transaction[];
   categoryStats: CategoryTotal[];
+  incomeCategoryStats?: CategoryTotal[];
   totalSpent: number;
+  totalIncome?: number;
   period: 'week' | 'month' | 'year';
   dateRange: string; // e.g., "01 Nov - 07 Nov" or "November 2025"
   userTelegramId: number;
@@ -173,7 +175,9 @@ export default async function handler(
     const {
       transactions,
       categoryStats,
+      incomeCategoryStats,
       totalSpent,
+      totalIncome,
       period,
       dateRange,
       userTelegramId,
@@ -220,18 +224,22 @@ export default async function handler(
 
 Here is the transaction data:
 
-Transactions (JSON):
+Transactions (JSON) - includes both expenses (negative amounts) and income (positive amounts):
 ${JSON.stringify(transactions, null, 2)}
 
-Category Totals:
+Expenses Category Totals:
 ${JSON.stringify(categoryStats, null, 2)}
 
+${incomeCategoryStats && incomeCategoryStats.length > 0 ? `Income Category Totals:
+${JSON.stringify(incomeCategoryStats, null, 2)}` : ''}
+
 Total Spent: ${totalSpent} ${userCurrency}
+${totalIncome !== undefined ? `Total Income: ${totalIncome} ${userCurrency}` : ''}
 
 Context:
 ${JSON.stringify(context, null, 2)}
 
-Now generate the analysis message following all the rules above.`;
+Now generate the analysis message following all the rules above. Include insights about both expenses and income when income data is available.`;
 
     // Call OpenAI
     const openaiApiKey = process.env.OPENAI_API_KEY;

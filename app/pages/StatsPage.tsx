@@ -242,9 +242,14 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
     setViewType(newViewType);
     localStorage.setItem('statsViewType', newViewType);
   };
-  // categoryStats contains all converted transactions and percentages - stored for later use
+  // categoryStats contains displayed stats (switches based on viewType)
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
+  // expensesCategoryStats and incomeCategoryStats are always calculated for analyze function
+  const [expensesCategoryStats, setExpensesCategoryStats] = useState<CategoryStats[]>([]);
+  const [incomeCategoryStats, setIncomeCategoryStats] = useState<CategoryStats[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [totalExpensesAmount, setTotalExpensesAmount] = useState<number>(0);
+  const [totalIncomeAmount, setTotalIncomeAmount] = useState<number>(0);
   const [userCurrency, setUserCurrency] = useState<string>('USD');
   const [loading, setLoading] = useState(true);
   const [spendingsData, setSpendingsData] = useState<Spending[]>([]);
@@ -295,133 +300,125 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         const userCurrencyData = await getCurrencyByCode(defaultCurrency);
         const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
 
-        // Calculate statistics based on viewType
-        if (viewType === 'expenses') {
-          // Calculate expenses statistics by category
-          const categoryMap = new Map<string, { category: Category; total: number }>();
+        // Calculate expenses statistics by category (always calculate both)
+        const expensesCategoryMap = new Map<string, { category: Category; total: number }>();
 
-          // Convert all spendings to user's currency and group by category
-          for (const spending of spendingsData) {
-            const convertedAmount = await convertToUserCurrency(
-              spending,
-              defaultCurrency,
-              userCurrencyRate
-            );
+        // Convert all spendings to user's currency and group by category
+        for (const spending of spendingsData) {
+          const convertedAmount = await convertToUserCurrency(
+            spending,
+            defaultCurrency,
+            userCurrencyRate
+          );
 
-            const categoryId = spending.category_id || 'undefined';
-            const category = cats.find(cat => cat.id === categoryId) || 
-                            cats.find(cat => cat.name === 'Undefined');
+          const categoryId = spending.category_id || 'undefined';
+          const category = cats.find(cat => cat.id === categoryId) || 
+                          cats.find(cat => cat.name === 'Undefined');
 
-            if (category) {
-              const existing = categoryMap.get(categoryId);
-              if (existing) {
-                existing.total += convertedAmount;
-              } else {
-                categoryMap.set(categoryId, {
-                  category,
-                  total: convertedAmount,
-                });
-              }
-            }
-          }
-
-          // Calculate total
-          let total = 0;
-          for (const { total: catTotal } of categoryMap.values()) {
-            total += catTotal;
-          }
-          setTotalAmount(total);
-
-          // Convert to array and calculate percentages
-          const timestamp = new Date().toISOString();
-          const stats: CategoryStats[] = Array.from(categoryMap.values())
-            .map(({ category, total: catTotal }) => ({
-              categoryId: category.id,
-              categoryName: category.name,
-              emoji: category.emoji,
-              color: getCategoryColor(category),
-              textColor: getCategoryTextColor(category),
-              amount: catTotal,
-              percentage: total > 0 ? (catTotal / total) * 100 : 0,
-              timestamp: timestamp,
-            }))
-            .sort((a, b) => b.amount - a.amount);
-
-          setCategoryStats(stats);
-        } else {
-          // Calculate income statistics by category
-          console.log('💰 Calculating income stats for', earningsData.length, 'earnings');
-          const categoryMap = new Map<string, { category: EarningsCategory; total: number }>();
-
-          // Convert all earnings to user's currency and group by category
-          for (const earning of earningsData) {
-            console.log('💰 Processing earning:', earning.earning_name, 'amount:', earning.earning_amount, 'currency:', earning.currency_code);
-            const convertedAmount = await convertEarningToUserCurrency(
-              earning,
-              defaultCurrency,
-              userCurrencyRate
-            );
-
-            // Find category - if category_id is null, find "Undefined" category
-            let category: EarningsCategory | undefined;
-            if (earning.category_id) {
-              category = earningsCats.find(cat => cat.id === earning.category_id);
-            }
-            
-            // If not found or category_id is null, use "Undefined"
-            if (!category) {
-              category = earningsCats.find(cat => cat.name === 'Undefined');
-            }
-
-            console.log('💰 Earning category lookup:', {
-              earningName: earning.earning_name,
-              categoryId: earning.category_id,
-              foundCategory: category ? category.name : 'NOT FOUND',
-              availableCategories: earningsCats.map(c => c.name).join(', ')
-            });
-
-            if (category) {
-              // Use the actual category ID (or "undefined" if null) as the map key
-              const mapKey = category.id;
-              const existing = categoryMap.get(mapKey);
-              if (existing) {
-                existing.total += convertedAmount;
-              } else {
-                categoryMap.set(mapKey, {
-                  category,
-                  total: convertedAmount,
-                });
-              }
+          if (category) {
+            const existing = expensesCategoryMap.get(categoryId);
+            if (existing) {
+              existing.total += convertedAmount;
             } else {
-              console.warn('⚠️ Could not find category for earning:', earning.earning_name, 'category_id:', earning.category_id);
+              expensesCategoryMap.set(categoryId, {
+                category,
+                total: convertedAmount,
+              });
             }
           }
+        }
 
-          // Calculate total
-          let total = 0;
-          for (const { total: catTotal } of categoryMap.values()) {
-            total += catTotal;
+        // Calculate expenses total
+        let expensesTotal = 0;
+        for (const { total: catTotal } of expensesCategoryMap.values()) {
+          expensesTotal += catTotal;
+        }
+        setTotalExpensesAmount(expensesTotal);
+
+        // Convert expenses to array and calculate percentages
+        const timestamp = new Date().toISOString();
+        const expensesStats: CategoryStats[] = Array.from(expensesCategoryMap.values())
+          .map(({ category, total: catTotal }) => ({
+            categoryId: category.id,
+            categoryName: category.name,
+            emoji: category.emoji,
+            color: getCategoryColor(category),
+            textColor: getCategoryTextColor(category),
+            amount: catTotal,
+            percentage: expensesTotal > 0 ? (catTotal / expensesTotal) * 100 : 0,
+            timestamp: timestamp,
+          }))
+          .sort((a, b) => b.amount - a.amount);
+
+        setExpensesCategoryStats(expensesStats);
+
+        // Calculate income statistics by category (always calculate both)
+        const incomeCategoryMap = new Map<string, { category: EarningsCategory; total: number }>();
+
+        // Convert all earnings to user's currency and group by category
+        for (const earning of earningsData) {
+          const convertedAmount = await convertEarningToUserCurrency(
+            earning,
+            defaultCurrency,
+            userCurrencyRate
+          );
+
+          // Find category - if category_id is null, find "Undefined" category
+          let category: EarningsCategory | undefined;
+          if (earning.category_id) {
+            category = earningsCats.find(cat => cat.id === earning.category_id);
           }
-          console.log('💰 Income total calculated:', total, 'from', categoryMap.size, 'categories');
-          setTotalAmount(total);
+          
+          // If not found or category_id is null, use "Undefined"
+          if (!category) {
+            category = earningsCats.find(cat => cat.name === 'Undefined');
+          }
 
-          // Convert to array and calculate percentages
-          const timestamp = new Date().toISOString();
-          const stats: CategoryStats[] = Array.from(categoryMap.values())
-            .map(({ category, total: catTotal }) => ({
-              categoryId: category.id,
-              categoryName: category.name,
-              emoji: category.emoji,
-              color: getCategoryColor(category),
-              textColor: getCategoryTextColor(category),
-              amount: catTotal,
-              percentage: total > 0 ? (catTotal / total) * 100 : 0,
-              timestamp: timestamp,
-            }))
-            .sort((a, b) => b.amount - a.amount);
+          if (category) {
+            // Use the actual category ID as the map key
+            const mapKey = category.id;
+            const existing = incomeCategoryMap.get(mapKey);
+            if (existing) {
+              existing.total += convertedAmount;
+            } else {
+              incomeCategoryMap.set(mapKey, {
+                category,
+                total: convertedAmount,
+              });
+            }
+          }
+        }
 
-          console.log('💰 Income category stats:', stats.length, 'categories', stats.map(s => `${s.categoryName}: ${s.amount}`).join(', '));
-          setCategoryStats(stats);
+        // Calculate income total
+        let incomeTotal = 0;
+        for (const { total: catTotal } of incomeCategoryMap.values()) {
+          incomeTotal += catTotal;
+        }
+        setTotalIncomeAmount(incomeTotal);
+
+        // Convert income to array and calculate percentages
+        const incomeStats: CategoryStats[] = Array.from(incomeCategoryMap.values())
+          .map(({ category, total: catTotal }) => ({
+            categoryId: category.id,
+            categoryName: category.name,
+            emoji: category.emoji,
+            color: getCategoryColor(category),
+            textColor: getCategoryTextColor(category),
+            amount: catTotal,
+            percentage: incomeTotal > 0 ? (catTotal / incomeTotal) * 100 : 0,
+            timestamp: timestamp,
+          }))
+          .sort((a, b) => b.amount - a.amount);
+
+        setIncomeCategoryStats(incomeStats);
+
+        // Update displayed stats based on viewType
+        if (viewType === 'expenses') {
+          setCategoryStats(expensesStats);
+          setTotalAmount(expensesTotal);
+        } else {
+          setCategoryStats(incomeStats);
+          setTotalAmount(incomeTotal);
         }
       } catch (error) {
         console.error('Error fetching stats data:', error);
@@ -431,7 +428,18 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
     };
 
     fetchData();
-  }, [selectedPeriod, user, refreshTrigger, viewType]);
+  }, [selectedPeriod, user, refreshTrigger]);
+
+  // Update displayed stats when viewType changes (without refetching data)
+  useEffect(() => {
+    if (viewType === 'expenses') {
+      setCategoryStats(expensesCategoryStats);
+      setTotalAmount(totalExpensesAmount);
+    } else {
+      setCategoryStats(incomeCategoryStats);
+      setTotalAmount(totalIncomeAmount);
+    }
+  }, [viewType, expensesCategoryStats, incomeCategoryStats, totalExpensesAmount, totalIncomeAmount]);
 
   // Handle category click - open modal and load transactions
   const handleCategoryClick = async (categoryId: string) => {
@@ -599,8 +607,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
 
   // Handle Analyze button click
   const handleAnalyze = async () => {
-    const dataToAnalyze = viewType === 'expenses' ? spendingsData : earningsData;
-    if (!user || dataToAnalyze.length === 0 || categoryStats.length === 0) {
+    if (!user || (spendingsData.length === 0 && earningsData.length === 0)) {
       alert('No data available for analysis');
       return;
     }
@@ -611,43 +618,78 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
       const userCurrencyData = await getCurrencyByCode(userCurrency);
       const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
 
-      // Format transactions for OpenAI
-      const transactions = await Promise.all(
-        (viewType === 'expenses' ? spendingsData : earningsData).map(async (item) => {
+      // Format expenses transactions for OpenAI
+      const expensesTransactions = await Promise.all(
+        spendingsData.map(async (spending) => {
           // Convert to user's currency
-          const convertedAmount = viewType === 'expenses'
-            ? await convertToUserCurrency(item as Spending, userCurrency, userCurrencyRate)
-            : await convertEarningToUserCurrency(item as Earning, userCurrency, userCurrencyRate);
+          const convertedAmount = await convertToUserCurrency(
+            spending,
+            userCurrency,
+            userCurrencyRate
+          );
 
           // Get category name
-          const category = viewType === 'expenses'
-            ? categories.find(cat => cat.id === (item as Spending).category_id) ||
-              categories.find(cat => cat.name === 'Undefined')
-            : earningsCategories.find(cat => cat.id === (item as Earning).category_id) ||
-              earningsCategories.find(cat => cat.name === 'Undefined');
+          const category = categories.find(cat => cat.id === spending.category_id) ||
+            categories.find(cat => cat.name === 'Undefined');
 
           // Format date as YYYY-MM-DD
-          const date = new Date(item.created_at);
+          const date = new Date(spending.created_at);
           const dateStr = date.toISOString().split('T')[0];
 
           return {
             date: dateStr,
-            amount: viewType === 'expenses' 
-              ? -Math.abs(convertedAmount) // Negative for spending
-              : Math.abs(convertedAmount), // Positive for income
+            amount: -Math.abs(convertedAmount), // Negative for spending
             currency: userCurrency,
             category: category?.name || 'Undefined',
-            merchant: viewType === 'expenses' 
-              ? (item as Spending).spending_name 
-              : (item as Earning).earning_name,
+            merchant: spending.spending_name,
             notes: undefined,
             is_recurring: false, // We don't track this yet
           };
         })
       );
 
-      // Format category stats
-      const categoryTotals = categoryStats.map(stat => ({
+      // Format income transactions for OpenAI
+      const incomeTransactions = await Promise.all(
+        earningsData.map(async (earning) => {
+          // Convert to user's currency
+          const convertedAmount = await convertEarningToUserCurrency(
+            earning,
+            userCurrency,
+            userCurrencyRate
+          );
+
+          // Get category name
+          const category = earningsCategories.find(cat => cat.id === earning.category_id) ||
+            earningsCategories.find(cat => cat.name === 'Undefined');
+
+          // Format date as YYYY-MM-DD
+          const date = new Date(earning.created_at);
+          const dateStr = date.toISOString().split('T')[0];
+
+          return {
+            date: dateStr,
+            amount: Math.abs(convertedAmount), // Positive for income
+            currency: userCurrency,
+            category: category?.name || 'Undefined',
+            merchant: earning.earning_name,
+            notes: undefined,
+            is_recurring: false, // We don't track this yet
+          };
+        })
+      );
+
+      // Combine all transactions (expenses first, then income)
+      const allTransactions = [...expensesTransactions, ...incomeTransactions];
+
+      // Format expenses category stats
+      const expensesCategoryTotals = expensesCategoryStats.map(stat => ({
+        category: stat.categoryName,
+        total: stat.amount,
+        percentage: stat.percentage,
+      }));
+
+      // Format income category stats
+      const incomeCategoryTotals = incomeCategoryStats.map(stat => ({
         category: stat.categoryName,
         total: stat.amount,
         percentage: stat.percentage,
@@ -663,9 +705,11 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          transactions,
-          categoryStats: categoryTotals,
-          totalSpent: viewType === 'expenses' ? totalAmount : -totalAmount, // Negative for income analysis
+          transactions: allTransactions,
+          categoryStats: expensesCategoryTotals,
+          incomeCategoryStats: incomeCategoryTotals,
+          totalSpent: totalExpensesAmount,
+          totalIncome: totalIncomeAmount,
           period: selectedPeriod,
           dateRange,
           userTelegramId: user.telegram_id,
@@ -875,7 +919,7 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
         before={<Icon24Guard />}
         style={{ marginBottom: '24px' }}
         onClick={handleAnalyze}
-        disabled={analyzing || (viewType === 'expenses' ? spendingsData.length === 0 : earningsData.length === 0)}
+        disabled={analyzing || (spendingsData.length === 0 && earningsData.length === 0)}
       >
         {analyzing ? 'Analyzing...' : 'Analyze'}
       </Button>
