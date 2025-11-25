@@ -698,6 +698,12 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
       // Get date range string
       const dateRange = formatPeriodDate(selectedPeriod);
 
+      // Calculate difference and ratio
+      const netDifference = totalIncomeAmount - totalExpensesAmount; // Positive = savings, Negative = deficit
+      const incomeToExpensesRatio = totalExpensesAmount > 0 
+        ? totalIncomeAmount / totalExpensesAmount 
+        : (totalIncomeAmount > 0 ? Infinity : 0); // If no expenses but has income, ratio is infinite
+
       // Call analyze API
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -710,6 +716,8 @@ const StatsPage = ({ user, refreshTrigger, onOpenEditor }: StatsPageProps) => {
           incomeCategoryStats: incomeCategoryTotals,
           totalSpent: totalExpensesAmount,
           totalIncome: totalIncomeAmount,
+          netDifference: netDifference,
+          incomeToExpensesRatio: incomeToExpensesRatio,
           period: selectedPeriod,
           dateRange,
           userTelegramId: user.telegram_id,

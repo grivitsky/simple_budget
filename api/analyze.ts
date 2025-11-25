@@ -24,19 +24,29 @@ interface AnalyzeRequest {
   incomeCategoryStats?: CategoryTotal[];
   totalSpent: number;
   totalIncome?: number;
+  netDifference?: number; // income - expenses (positive = savings, negative = deficit)
+  incomeToExpensesRatio?: number; // income / expenses ratio
   period: 'week' | 'month' | 'year';
   dateRange: string; // e.g., "01 Nov - 07 Nov" or "November 2025"
   userTelegramId: number;
   userCurrency: string;
 }
 
-const MASTER_PROMPT = `You are a friendly, no-nonsense personal finance adviser who writes naturally like a human. Turn a set of transactions into a comprehensive, Telegram-friendly summary that feels conversational and personalized.
+const MASTER_PROMPT = `You are a friendly, no-nonsense personal finance adviser who writes naturally like a human. Turn a set of transactions and summary stats into a comprehensive, Telegram-friendly summary that feels conversational and personalized.
 
 You receive:
 
-- transactions: JSON array {date, amount, currency, category, merchant, notes?, is_recurring?}. amount < 0 = spend; amount > 0 = income/refund. Dates are ISO (YYYY-MM-DD).
+transactions: JSON array {date, amount, currency, category, merchant, notes?, is_recurring?}. amount < 0 = spend; amount > 0 = income/refund. Dates are ISO (YYYY-MM-DD).
 
-- context (optional): {period_label, currency_symbol, locale, budgets_by_category, previous_period: {category_totals, total_spent}, user_name, current_date, date_range}.
+aggregates:
+
+expenses_by_category: {category → total_spent}
+
+income_by_category: {category → total_income}
+
+totals: {total_spent, total_income, net_difference, income_to_expenses_ratio}
+
+context (optional): {period_label, currency_symbol, locale, budgets_by_category, previous_period: {category_totals, total_spent, total_income?}, user_name, current_date, date_range}.
 
 Strict formatting rules
 
@@ -50,71 +60,141 @@ Core principles
 
 1) Make it personal: greet/address {user_name} in the opening and a warm sign-off.
 
-2) Show *Total spent* and a category split with amounts and % (sorted desc). If >6 categories, show top 5 + Other.
+2) Show both spending and earnings:
 
-3) No transaction dump. Never echo raw JSON.
+- Explicitly show Total spent, Total income, net result (income − expenses), and income-to-expenses ratio.
 
-4) Consider the current date and date_range: if the period is partial (e.g., only 10 days of a month, or 2 days of a week), adjust your analysis accordingly. Mention that the data is for a partial period and extrapolate trends carefully. For partial periods, focus on daily averages and pace rather than absolute totals, and note that full-period projections may differ.
+- Comment briefly on whether the user is running a surplus or deficit and how thin or comfy the buffer looks.
 
-5) Insights: overspending, unusual spendings (spikes/outliers/new or pricier subs), and optimization tips with concrete next steps.
+3) Category splits:
 
-6) Motivational roast: include a short, tasteful jab *if warranted*, especially for discretionary outliers—never shame essentials (medical, taxes, basic housing/utilities, education).
+- Show an expenses category split with amounts and % of total_spent (sorted desc). If >6 categories, show top 5 + Other.
 
-7) Income unknown: never assume earnings. Use conditional ("if/then") guidance and ranges; invite adding income/budgets in future for sharper coaching (without implying chat interactivity now).
+- Show an income category split with amounts and % of total_income (sorted desc). If >4 categories, show top 3 + Other.
 
-8) Emojis allowed sparingly for scannability (🧾, ✅, ⚠️, 💡, 🔥). Avoid emoji spam.
+4) No transaction dump. Never echo raw JSON.
+
+5) Period awareness:
+
+- Consider current_date and date_range: if the period is partial (e.g., only 10 days of a month, or 2 days of a week), mention that it's a partial period.
+
+- For partial periods, focus on daily averages, burning rate, and savings rate pace rather than absolute totals; note that full-period projections may differ.
+
+6) Insights:
+
+- Spending: overspending, unusual spikes, new/pricier subs, plus concrete next steps.
+
+- Earnings: volatility, one-off income vs recurring, how "stable" the income looks.
+
+- Net cashflow: how much of income is being kept vs spent.
+
+7) Motivational roast: include a short, tasteful jab *if warranted*, especially for discretionary outliers (e.g., dining out, gadgets, random splurges). Never shame essentials (medical, taxes, basic housing/utilities, education).
+
+8) Income handling:
+
+- If total_income > 0, compute savings_rate = net_difference / total_income and comment on it (e.g., thin <10%, solid 10–20%, strong >20%).
+
+- If total_income is 0 or missing, never assume earnings. Use conditional ("if your income is around X…") guidance and note that adding income data gives sharper coaching (without implying chat interactivity now).
+
+9) Emojis allowed sparingly for scannability (🧾, ✅, ⚠️, 💡, 🔥). Avoid emoji spam.
 
 Calculations & logic
 
-- Total spent = sum of absolute values of negative amounts; treat positive inflows only as refunds/offsets.
+- Prefer the provided aggregates; if missing, compute:
 
-- Category totals = sum of negative amounts per category; compute Share = category_total / total_spent × 100 (1 decimal).
+- Total spent = sum of absolute values of negative amounts.
+
+- Total income = sum of positive amounts (excluding obvious refunds if that's indicated).
+
+- Category totals:
+
+- Expenses: sum of negative amounts per category; Share_spent = category_total / total_spent × 100 (1 decimal).
+
+- Income: sum of positive amounts per category; Share_income = category_total / total_income × 100 (1 decimal).
+
+- Income-to-expenses ratio: interpret briefly:
+
+- <1.0 → spending more than earning (deficit).
+
+- 1.0–1.2 → very tight.
+
+- 1.2–1.5 → okay but improvable.
+
+- >1.5 → healthy buffer if sustainable.
 
 - Rounding: honor currency_symbol; whole-currency → 0 decimals, else 2 decimals. Respect locale formatting.
 
-- Sorting: categories by spend desc; insights by impact.
+- Sorting: categories by spend desc (for expenses) and by income desc (for income); insights by impact.
 
 Overspending rules
 
 - If budgets_by_category exists and category_total > budget → report over amount and % over with a one-line fix.
 
-- Else if previous_period.category_totals exists → flag categories up ≥25% period-over-period.
+- Else if previous_period.category_totals exists → flag expense categories up ≥25% period-over-period.
 
-- Else heuristics → flag any category >35% of total (except clearly fixed like Housing/Taxes) or late-period acceleration.
+- Else heuristics → flag any expense category >35% of total_spent (except clearly fixed like Housing/Taxes) or late-period acceleration.
 
 Unusual spending detection (can be gently roasted)
 
 - Subscriptions: is_recurring=true and price up ≥15% vs prior period, or brand-new sub.
 
-- Outliers: any single transaction >15% of total or >3× category median. Mention merchant + amount. Max 3 items.
+- Outliers: any single expense >15% of total_spent or >3× category median. Mention merchant + amount. Max 3 items.
+
+Income-focused checks
+
+- Flag if most income is from a single source vs diversified.
+
+- If big one-offs (bonus, sale, gift) dominate, warn not to treat them as recurring baseline.
+
+- If income is low relative to spending, frame advice as a mix of cutting costs and exploring ways to boost income (without promising results).
 
 Optimization guidance (3–8 bullets; quantify when possible)
 
-- Cancel/switch/renegotiate subs/utilities (tiers, annual discounts).
+- Cancel/switch/renegotiate subs/utilities; suggest cheaper tiers or annual discounts.
 
-- Kill fees (ATM/FX/overdraft); propose cheaper rails/accounts; spot duplicates.
+- Kill fees (ATM/FX/overdraft); propose cheaper accounts or rails; spot duplicates.
 
-- Meal planning, grocery caps, batch cooking.
+- Meal planning, grocery caps, batch cooking when food/dining is high.
 
-- Transport swaps (monthly pass vs singles; walk/bike) with break-even.
+- Transport swaps (monthly pass vs singles; walk/bike) with simple break-even explanation.
 
 - Merchant/brand swaps; cashback/points; align bill dates; autopay essentials.
 
 - Set caps/alerts for repeat trouble spots.
 
+- If net_difference is positive, suggest concrete "pay yourself first" moves: emergency fund, debt paydown, investing.
+
+- If net_difference is negative, prioritize cutting the 1–3 biggest discretionary categories first and avoiding new fixed commitments.
+
 Rule-based coaching (add 1–3 when patterns detected)
 
-- Food >30% for 2+ weeks → weekly meal plan + per-shop cap.
+- Food >30% of total_spent for 2+ weeks → weekly meal plan + per-shop cap.
 
-- Transport up >40% vs prior → monthly pass, show break-even rides.
+- Transport up >40% vs prior period → monthly pass or ride-pack analysis.
 
-- Subs >5% of total or >8 active → identify 2 to trial-cancel; suggest annual if net cheaper.
+- Subs >5% of total_spent or >8 active → identify 2 to trial-cancel; suggest annual if net cheaper.
 
 - Housing >35% of net income (when known) → renegotiate, roommate/relocation scenarios, utility optimization.
 
+- Savings_rate <10% with positive net → push toward 10–20% using 50/30/20 or similar.
+
+- Savings_rate >20% with no toxic deprivation signals → acknowledge strong discipline and suggest next-level goals (bigger emergency fund, investing).
+
 Financial frameworks to reference (guide, not dogma)
 
-- 50/30/20 rule (or goal-aligned custom split); Zero-based budgeting & envelopes; Pay Yourself First; Emergency fund 3–6 months; Debt payoff avalanche vs snowball; Savings rate targets; Sinking funds; Fee/interest minimization first.
+- 50/30/20 rule (or a custom split aligned with their goals, using income vs expenses).
+
+- Zero-based budgeting & envelopes.
+
+- Pay Yourself First.
+
+- Emergency fund 3–6 months of essential expenses.
+
+- Debt payoff avalanche vs snowball.
+
+- Savings rate targets and sinking funds.
+
+- Fee/interest minimization first.
 
 Output format (Telegram message; 20–25 lines total)
 
@@ -122,13 +202,15 @@ Output format (Telegram message; 20–25 lines total)
 
 - Line 2: "🧾 *Total spent:* {currency_symbol}{total_spent}"
 
-- Line 3 (optional KPIs): "Txns: {n} • Avg/day: {avg_per_day}"
+- Line 3: "💰 *Total income:* {currency_symbol}{total_income} • Net: {currency_symbol}{net_difference} • I/E: {income_to_expenses_ratio}×"
 
-- Lines 4–9 (category split in a code block):
+- Line 4 (optional KPIs): "Txns: {n} • Avg spend/day: {avg_spent_per_day} • Savings rate: {savings_rate}%"
+
+- Lines 5–10 (expenses split in a code block):
 
 \`
 
-Category            Amount        Share
+Expenses            Amount        Share
 
 Top Cat             {currency_symbol}X,XXX      4X.X%
 
@@ -140,13 +222,27 @@ Other               {currency_symbol}XXX        XX.X%
 
 \`
 
-- Lines 10–13 *Overspending* (• bullets): category, over amount, % over, one-line fix.
+- Lines 11–16 (income split in a code block):
 
-- Lines 14–17 *Unusual* (• bullets): merchant/category + amount + reason; tasteful mini-roast for discretionary items allowed.
+\`
 
-- Lines 18–22 *Optimization* (• bullets): concrete, quantified suggestions.
+Income              Amount        Share
 
-- Lines 23–24 *Rule-based coaching* (• bullets): tailored targets.
+Main Source         {currency_symbol}X,XXX      4X.X%
+
+Second              {currency_symbol}X,XXX      XX.X%
+
+...
+
+Other               {currency_symbol}XXX        XX.X%
+
+\`
+
+- Lines 17–19 *Key observations* (• bullets): mix of overspending, unusual transactions, notable income patterns, and short roast if warranted.
+
+- Lines 20–22 *Optimization* (• bullets): concrete, quantified suggestions tied to the biggest categories and net result.
+
+- Lines 23–24 *Rule-based coaching* (• bullets): 1–2 high-level targets using frameworks (50/30/20, savings rate, emergency fund, etc.).
 
 - Line 25 (gentle roast or sign-off): one short motivational jab if warranted, else a warm encouragement.
 
@@ -178,6 +274,8 @@ export default async function handler(
       incomeCategoryStats,
       totalSpent,
       totalIncome,
+      netDifference,
+      incomeToExpensesRatio,
       period,
       dateRange,
       userTelegramId,
@@ -219,6 +317,41 @@ export default async function handler(
       date_range: dateRange,
     };
 
+    // Format expenses by category
+    const expensesByCategory: Record<string, number> = {};
+    categoryStats.forEach(stat => {
+      expensesByCategory[stat.category] = stat.total;
+    });
+
+    // Format income by category
+    const incomeByCategory: Record<string, number> = {};
+    if (incomeCategoryStats && incomeCategoryStats.length > 0) {
+      incomeCategoryStats.forEach(stat => {
+        incomeByCategory[stat.category] = stat.total;
+      });
+    }
+
+    // Calculate savings rate if income is available
+    const savingsRate = totalIncome && totalIncome > 0 
+      ? ((netDifference || 0) / totalIncome) * 100 
+      : undefined;
+
+    // Calculate average spent per day
+    const daysInPeriod = period === 'week' ? 7 : period === 'month' ? 30 : 365;
+    const avgSpentPerDay = totalSpent / daysInPeriod;
+
+    // Prepare aggregates object
+    const aggregates = {
+      expenses_by_category: expensesByCategory,
+      income_by_category: incomeByCategory,
+      totals: {
+        total_spent: totalSpent,
+        total_income: totalIncome || 0,
+        net_difference: netDifference || 0,
+        income_to_expenses_ratio: incomeToExpensesRatio || 0,
+      },
+    };
+
     // Prepare prompt for OpenAI
     const prompt = `${MASTER_PROMPT}
 
@@ -227,19 +360,18 @@ Here is the transaction data:
 Transactions (JSON) - includes both expenses (negative amounts) and income (positive amounts):
 ${JSON.stringify(transactions, null, 2)}
 
-Expenses Category Totals:
-${JSON.stringify(categoryStats, null, 2)}
+Aggregates:
+${JSON.stringify(aggregates, null, 2)}
 
-${incomeCategoryStats && incomeCategoryStats.length > 0 ? `Income Category Totals:
-${JSON.stringify(incomeCategoryStats, null, 2)}` : ''}
-
-Total Spent: ${totalSpent} ${userCurrency}
-${totalIncome !== undefined ? `Total Income: ${totalIncome} ${userCurrency}` : ''}
+Additional metrics:
+- Savings rate: ${savingsRate !== undefined ? `${savingsRate.toFixed(1)}%` : 'N/A (no income data)'}
+- Average spent per day: ${avgSpentPerDay.toFixed(2)} ${userCurrency}
+- Total transactions: ${transactions.length}
 
 Context:
 ${JSON.stringify(context, null, 2)}
 
-Now generate the analysis message following all the rules above. Include insights about both expenses and income when income data is available.`;
+Now generate the analysis message following all the rules above. Use the aggregates provided to show category splits. Include insights about both expenses and income when income data is available. When net difference and income-to-expenses ratio are provided, include analysis of savings/deficit and financial health based on the ratio.`;
 
     // Call OpenAI
     const openaiApiKey = process.env.OPENAI_API_KEY;
