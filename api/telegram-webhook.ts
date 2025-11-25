@@ -127,9 +127,31 @@ Ready to start tracking? Just send me a transaction! 📊`;
       const trimmedMessage = messageText.trim();
       const isIncome = trimmedMessage.startsWith('+');
       let messageToProcess = trimmedMessage;
+      
       if (isIncome) {
         // Remove the "+" and any space immediately after it
         messageToProcess = trimmedMessage.replace(/^\+\s*/, '').trim();
+        
+        // Validate that we have content after stripping the "+"
+        if (!messageToProcess) {
+          const chatId = update.message.chat.id;
+          const errorText = `❌ Invalid income format. Please include amount and name. Format: "+10.12 $ Job" or "+10.12 USD Job" or "+10.12 Job"`;
+          
+          try {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: errorText,
+              }),
+            });
+          } catch (error) {
+            console.error('Error sending error message:', error);
+          }
+          
+          return res.status(200).json({ ok: true, error: 'Invalid income format' });
+        }
       }
 
       // Create spending or earning from message
@@ -137,9 +159,24 @@ Ready to start tracking? Just send me a transaction! 📊`;
       console.log('💰 Transaction type:', isIncome ? 'Income' : 'Expense');
       console.log('📝 Message to process:', messageToProcess);
       
-      const spending = isIncome ? null : await createSpendingFromMessage(user, messageToProcess);
-      const earning = isIncome ? await createEarningFromMessage(user, messageToProcess) : null;
-      console.log('📊 Parsing result:', (spending || earning) ? 'Success' : 'Failed');
+      let spending = null;
+      let earning = null;
+      
+      if (isIncome) {
+        // Only try to create earning for income transactions
+        earning = await createEarningFromMessage(user, messageToProcess);
+        console.log('📊 Income parsing result:', earning ? 'Success' : 'Failed');
+        if (!earning) {
+          console.error('❌ Failed to parse income. Original:', messageText, 'Processed:', messageToProcess);
+        }
+      } else {
+        // Only try to create spending for expense transactions
+        spending = await createSpendingFromMessage(user, messageToProcess);
+        console.log('📊 Expense parsing result:', spending ? 'Success' : 'Failed');
+        if (!spending) {
+          console.error('❌ Failed to parse expense. Original:', messageText, 'Processed:', messageToProcess);
+        }
+      }
 
       if (spending || earning) {
         // Send success response to user via Telegram Bot API
