@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { getCurrencyByCode } from './currencyService';
-import { matchEarningsCategoryByName } from './earningsCategoryService';
+import { matchEarningsCategoryByName, getUndefinedEarningsCategory } from './earningsCategoryService';
 import type { User } from './supabase';
 
 export interface Earning {
@@ -169,9 +169,15 @@ export async function createEarningFromMessage(
     // Calculate amount in base currency (USD)
     const amountInBaseCurrency = parsed.amount / exchangeRate;
 
-    // Match category
+    // Match category (always returns Undefined category as default)
     const category = await matchEarningsCategoryByName(parsed.earningName);
-    const categoryId = category?.id || null;
+    // Ensure we always have a category ID - fallback to Undefined if null
+    let categoryId = category?.id || null;
+    if (!categoryId) {
+      // Fallback: get Undefined category directly
+      const undefinedCategory = await getUndefinedEarningsCategory();
+      categoryId = undefinedCategory?.id || null;
+    }
 
     // Create earning entry
     const earningData: EarningInsert = {
