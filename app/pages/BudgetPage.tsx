@@ -6,7 +6,9 @@ import { Subheadline } from '../../src/components/Typography/Subheadline/Subhead
 import { Cell } from '../../src/components/Blocks/Cell/Cell';
 import { Text } from '../../src/components/Typography/Text/Text';
 import { getUserSpendings, updateSpending, type Spending } from '../lib/spendingService';
+import { getUserEarnings, updateEarning, type Earning } from '../lib/earningsService';
 import { getAllCategories, getUndefinedCategory, type Category } from '../lib/categoryService';
+import { getAllEarningsCategories, getUndefinedEarningsCategory, type EarningsCategory } from '../lib/earningsCategoryService';
 import { getCurrencyByCode } from '../lib/currencyService';
 import { getCategoryColor, getCategoryTextColor } from '../lib/themeUtils';
 import type { User } from '../lib/supabase';
@@ -95,7 +97,7 @@ function formatNumber(num: number): string {
 }
 
 /**
- * Convert amount to user's default currency
+ * Convert amount to user's default currency (for spending)
  */
 async function convertToUserCurrency(
   spending: Spending,
@@ -111,6 +113,23 @@ async function convertToUserCurrency(
   return spending.amount_in_base_currency * userCurrencyRate;
 }
 
+/**
+ * Convert amount to user's default currency (for earning)
+ */
+async function convertEarningToUserCurrency(
+  earning: Earning,
+  userDefaultCurrency: string,
+  userCurrencyRate: number
+): Promise<number> {
+  // If transaction currency matches user's default currency, return earning_amount
+  if (earning.currency_code === userDefaultCurrency) {
+    return earning.earning_amount;
+  }
+
+  // Otherwise, convert from base currency (USD) to user's default currency
+  return earning.amount_in_base_currency * userCurrencyRate;
+}
+
 interface BudgetPageProps {
   user?: User | null;
   refreshTrigger?: number;
@@ -118,13 +137,17 @@ interface BudgetPageProps {
 
 const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
   const [uncategorizedSpendings, setUncategorizedSpendings] = useState<Spending[]>([]);
+  const [uncategorizedEarnings, setUncategorizedEarnings] = useState<Earning[]>([]);
   const [currentSpending, setCurrentSpending] = useState<Spending | null>(null);
+  const [currentEarning, setCurrentEarning] = useState<Earning | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [earningsCategories, setEarningsCategories] = useState<EarningsCategory[]>([]);
   const [userCurrency, setUserCurrency] = useState<string>('USD');
   const [currentAmount, setCurrentAmount] = useState<number>(0);
+  const [isOrganizingIncome, setIsOrganizingIncome] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load uncategorized spendings and categories
+  // Load uncategorized spendings and earnings
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id) {
@@ -134,12 +157,15 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
 
       setLoading(true);
       try {
-        // Load categories
+        // Load both categories and earnings categories
         const cats = await getAllCategories();
         setCategories(cats);
+        const earningsCats = await getAllEarningsCategories();
+        setEarningsCategories(earningsCats);
         
-        // Get undefined category
+        // Get undefined categories
         const undefinedCat = await getUndefinedCategory();
+        const undefinedEarningsCat = await getUndefinedEarningsCategory();
 
         // Get user's default currency
         const defaultCurrency = user.default_currency || 'USD';
@@ -156,10 +182,12 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         
         setUncategorizedSpendings(uncategorized);
         
-        // Set first uncategorized spending as current
+        // If there are uncategorized spendings, show them
         if (uncategorized.length > 0) {
+          setIsOrganizingIncome(false);
           const first = uncategorized[0];
           setCurrentSpending(first);
+          setCurrentEarning(null);
           
           // Calculate amount in user's currency
           const userCurrencyData = await getCurrencyByCode(defaultCurrency);
@@ -167,8 +195,35 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
           const convertedAmount = await convertToUserCurrency(first, defaultCurrency, userCurrencyRate);
           setCurrentAmount(convertedAmount);
         } else {
-          setCurrentSpending(null);
-          setCurrentAmount(0);
+          // No spendings to organize, check for earnings
+          const allEarnings = await getUserEarnings(user.id);
+          
+          // Filter uncategorized earnings (category_id is null or points to "Undefined")
+          const undefinedEarningsCategoryId = undefinedEarningsCat?.id;
+          const uncategorizedEarnings = allEarnings.filter(earning => 
+            !earning.category_id || earning.category_id === undefinedEarningsCategoryId
+          );
+          
+          setUncategorizedEarnings(uncategorizedEarnings);
+          
+          if (uncategorizedEarnings.length > 0) {
+            setIsOrganizingIncome(true);
+            const first = uncategorizedEarnings[0];
+            setCurrentEarning(first);
+            setCurrentSpending(null);
+            
+            // Calculate amount in user's currency
+            const userCurrencyData = await getCurrencyByCode(defaultCurrency);
+            const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+            const convertedAmount = await convertEarningToUserCurrency(first, defaultCurrency, userCurrencyRate);
+            setCurrentAmount(convertedAmount);
+          } else {
+            // No transactions to organize
+            setIsOrganizingIncome(false);
+            setCurrentSpending(null);
+            setCurrentEarning(null);
+            setCurrentAmount(0);
+          }
         }
       } catch (error) {
         console.error('Error loading budget data:', error);
@@ -182,40 +237,96 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
 
   // Handle category selection
   const handleCategorySelect = async (categoryId: string) => {
-    if (!currentSpending) return;
-
     try {
-      // Update spending category
-      const updated = await updateSpending(currentSpending.id, {
-        category_id: categoryId,
-      });
+      if (isOrganizingIncome && currentEarning) {
+        // Update earning category
+        const updated = await updateEarning(currentEarning.id, {
+          category_id: categoryId,
+        });
 
-      if (updated) {
-        // Haptic feedback for success
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
+        if (updated) {
+          // Haptic feedback for success
+          if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          }
 
-        // Remove current spending from uncategorized list
-        const remaining = uncategorizedSpendings.filter(s => s.id !== currentSpending.id);
-        setUncategorizedSpendings(remaining);
+          // Remove current earning from uncategorized list
+          const remaining = uncategorizedEarnings.filter(e => e.id !== currentEarning.id);
+          setUncategorizedEarnings(remaining);
 
-        // Set next uncategorized spending as current
-        if (remaining.length > 0) {
-          const next = remaining[0];
-          setCurrentSpending(next);
-          
-          // Calculate amount in user's currency
-          const userCurrencyData = await getCurrencyByCode(userCurrency);
-          const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
-          const convertedAmount = await convertToUserCurrency(next, userCurrency, userCurrencyRate);
-          setCurrentAmount(convertedAmount);
+          // Set next uncategorized earning as current
+          if (remaining.length > 0) {
+            const next = remaining[0];
+            setCurrentEarning(next);
+            
+            // Calculate amount in user's currency
+            const userCurrencyData = await getCurrencyByCode(userCurrency);
+            const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+            const convertedAmount = await convertEarningToUserCurrency(next, userCurrency, userCurrencyRate);
+            setCurrentAmount(convertedAmount);
+          } else {
+            setCurrentEarning(null);
+            setCurrentAmount(0);
+          }
         } else {
-          setCurrentSpending(null);
-          setCurrentAmount(0);
+          alert('Failed to update category');
         }
-      } else {
-        alert('Failed to update category');
+      } else if (!isOrganizingIncome && currentSpending) {
+        // Update spending category
+        const updated = await updateSpending(currentSpending.id, {
+          category_id: categoryId,
+        });
+
+        if (updated) {
+          // Haptic feedback for success
+          if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          }
+
+          // Remove current spending from uncategorized list
+          const remaining = uncategorizedSpendings.filter(s => s.id !== currentSpending.id);
+          setUncategorizedSpendings(remaining);
+
+          // Set next uncategorized spending as current
+          if (remaining.length > 0) {
+            const next = remaining[0];
+            setCurrentSpending(next);
+            
+            // Calculate amount in user's currency
+            const userCurrencyData = await getCurrencyByCode(userCurrency);
+            const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+            const convertedAmount = await convertToUserCurrency(next, userCurrency, userCurrencyRate);
+            setCurrentAmount(convertedAmount);
+          } else {
+            // No more spendings, check for earnings
+            setCurrentSpending(null);
+            
+            // Load earnings if available
+            const allEarnings = await getUserEarnings(user?.id || '');
+            const undefinedEarningsCat = await getUndefinedEarningsCategory();
+            const undefinedEarningsCategoryId = undefinedEarningsCat?.id;
+            const uncategorizedEarnings = allEarnings.filter(earning => 
+              !earning.category_id || earning.category_id === undefinedEarningsCategoryId
+            );
+            
+            setUncategorizedEarnings(uncategorizedEarnings);
+            
+            if (uncategorizedEarnings.length > 0) {
+              setIsOrganizingIncome(true);
+              const first = uncategorizedEarnings[0];
+              setCurrentEarning(first);
+              
+              const userCurrencyData = await getCurrencyByCode(userCurrency);
+              const userCurrencyRate = userCurrencyData?.exchange_rate_to_usd || 1;
+              const convertedAmount = await convertEarningToUserCurrency(first, userCurrency, userCurrencyRate);
+              setCurrentAmount(convertedAmount);
+            } else {
+              setCurrentAmount(0);
+            }
+          }
+        } else {
+          alert('Failed to update category');
+        }
       }
     } catch (error) {
       console.error('Error updating category:', error);
@@ -333,7 +444,9 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
   }
 
   // Filter out "Undefined" category from display
-  const displayCategories = categories.filter(cat => cat.name !== 'Undefined');
+  const displayCategories = isOrganizingIncome
+    ? earningsCategories.filter(cat => cat.name !== 'Undefined')
+    : categories.filter(cat => cat.name !== 'Undefined');
 
   return (
     <div style={{ 
@@ -354,12 +467,15 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
           Organize
         </Title>
         <Button mode="plain" size="s">
-          {uncategorizedSpendings.length} {uncategorizedSpendings.length === 1 ? 'Item' : 'Items'} Left
+          {isOrganizingIncome 
+            ? `${uncategorizedEarnings.length} ${uncategorizedEarnings.length === 1 ? 'Item' : 'Items'} Left`
+            : `${uncategorizedSpendings.length} ${uncategorizedSpendings.length === 1 ? 'Item' : 'Items'} Left`
+          }
         </Button>
       </div>
 
       {/* Section 2: Transaction Card */}
-      {currentSpending ? (
+      {(currentSpending || currentEarning) ? (
         <Card style={{
           backgroundColor: 'var(--tgui--bg_color)',
           borderRadius: '12px',
@@ -385,7 +501,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
                 color: 'var(--tgui--hint_color)',
                 lineHeight: '1',
               }}>
-                -{userCurrency}
+                {isOrganizingIncome ? '+' : '-'}{userCurrency}
               </span>
             </div>
             <span style={{
@@ -408,7 +524,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
             gap: '8px',
           }}>
             <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--hint_color)' }}>
-              {currentSpending.spending_name}
+              {currentSpending?.spending_name || currentEarning?.earning_name}
             </Subheadline>
             <div style={{
               width: '1px',
@@ -416,7 +532,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
               backgroundColor: 'var(--tgui--secondary_bg_color)',
             }} />
             <Subheadline level="2" weight="3" style={{ color: 'var(--tgui--hint_color)' }}>
-              {formatDate(new Date(currentSpending.created_at))}
+              {formatDate(new Date((currentSpending || currentEarning)!.created_at))}
             </Subheadline>
           </div>
         </Card>
@@ -483,7 +599,7 @@ const BudgetPage = ({ user, refreshTrigger }: BudgetPageProps) => {
         </div>
 
         {/* Categories List */}
-        {currentSpending ? (
+        {(currentSpending || currentEarning) ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {displayCategories.map((category) => {
               const categoryColor = getCategoryColor(category);
