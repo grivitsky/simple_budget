@@ -228,16 +228,102 @@ Now generate the analysis message following all the rules above. Use the aggrega
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (botToken) {
       try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: userTelegramId,
-            text: analysis,
-            parse_mode: 'Markdown',
-          }),
-        });
-        console.log('✅ Analysis sent to Telegram');
+        // Telegram has a 4096 character limit per message
+        const TELEGRAM_MAX_LENGTH = 4096;
+        
+        if (analysis.length <= TELEGRAM_MAX_LENGTH) {
+          // Message fits in one message
+          const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: userTelegramId,
+              text: analysis,
+              parse_mode: 'Markdown',
+            }),
+          });
+          
+          const telegramData = await telegramResponse.json();
+          if (!telegramResponse.ok || !telegramData.ok) {
+            console.error('Telegram API error:', telegramResponse.status, telegramData);
+          } else {
+            console.log('✅ Analysis sent to Telegram');
+          }
+        } else {
+          // Split message into chunks
+          console.log(`Message is ${analysis.length} characters, splitting into chunks...`);
+          const chunks = [];
+          let currentChunk = '';
+          
+          // Split by paragraphs (double newlines) to avoid breaking mid-sentence
+          const paragraphs = analysis.split(/\n\n+/);
+          
+          for (const paragraph of paragraphs) {
+            const testChunk = currentChunk ? `${currentChunk}\n\n${paragraph}` : paragraph;
+            
+            if (testChunk.length <= TELEGRAM_MAX_LENGTH) {
+              currentChunk = testChunk;
+            } else {
+              if (currentChunk) {
+                chunks.push(currentChunk);
+              }
+              // If single paragraph is too long, split by sentences
+              if (paragraph.length > TELEGRAM_MAX_LENGTH) {
+                const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+                let sentenceChunk = '';
+                
+                for (const sentence of sentences) {
+                  const testSentenceChunk = sentenceChunk ? `${sentenceChunk} ${sentence}` : sentence;
+                  if (testSentenceChunk.length <= TELEGRAM_MAX_LENGTH) {
+                    sentenceChunk = testSentenceChunk;
+                  } else {
+                    if (sentenceChunk) chunks.push(sentenceChunk);
+                    sentenceChunk = sentence;
+                  }
+                }
+                if (sentenceChunk) currentChunk = sentenceChunk;
+              } else {
+                currentChunk = paragraph;
+              }
+            }
+          }
+          
+          if (currentChunk) {
+            chunks.push(currentChunk);
+          }
+          
+          // Send each chunk
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const messageText = chunks.length > 1 
+              ? `📊 Analysis (part ${i + 1}/${chunks.length})\n\n${chunk}`
+              : chunk;
+            
+            const telegramResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: userTelegramId,
+                text: messageText,
+                parse_mode: 'Markdown',
+              }),
+            });
+            
+            const telegramData = await telegramResponse.json();
+            if (!telegramResponse.ok || !telegramData.ok) {
+              console.error(`Telegram API error for chunk ${i + 1}:`, telegramResponse.status, telegramData);
+            } else {
+              console.log(`✅ Analysis chunk ${i + 1}/${chunks.length} sent to Telegram`);
+            }
+            
+            // Small delay between messages to avoid rate limiting
+            if (i < chunks.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+          
+          console.log(`✅ All ${chunks.length} analysis chunks sent to Telegram`);
+        }
       } catch (error) {
         console.error('Error sending Telegram message:', error);
         // Don't fail the request if Telegram message fails
