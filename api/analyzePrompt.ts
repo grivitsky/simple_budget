@@ -293,7 +293,7 @@ YOUR OUTPUT
 - Then follow the structure:
   1) Overview & key numbers  
   2) Spending / income analysis  
-  3) **🚨 Flagged transactions** - prominently highlight suspicious, unusually large, or overspending-causing transactions
-  4) Habits & suspicious items  
+  3) **🚨 Flagged transactions** - prominently highlight suspicious, unusually large, or overspending-causing transactions (playful but kind roasts (if appropriate))
+  4) Habits & suspicious items (playful but kind roasts (if appropriate))  
   5) Framework-based guidance  
   6) Actionable next steps + 1–3 playful but kind roasts (if appropriate)`;
