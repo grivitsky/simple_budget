@@ -82,8 +82,13 @@ export default async function handler(
                        period === 'month' ? dateRange : 
                        dateRange;
 
+    // Split transactions into spending and earnings
+    const spendingTransactions = transactions.filter(t => t.amount < 0);
+    const earningsTransactions = transactions.filter(t => t.amount > 0);
+
     // Prepare context for OpenAI
     const context = {
+      period: period,
       period_label: periodLabel,
       currency_symbol: currencySymbol,
       locale: user.language_code || 'en',
@@ -92,17 +97,23 @@ export default async function handler(
       date_range: dateRange,
     };
 
-    // Format expenses by category
-    const expensesByCategory: Record<string, number> = {};
+    // Format expenses by category with total and percentage
+    const expensesByCategory: Record<string, { total: number; percentage: number }> = {};
     categoryStats.forEach(stat => {
-      expensesByCategory[stat.category] = stat.total;
+      expensesByCategory[stat.category] = {
+        total: stat.total,
+        percentage: stat.percentage,
+      };
     });
 
-    // Format income by category
-    const incomeByCategory: Record<string, number> = {};
+    // Format income by category with total and percentage
+    const incomeByCategory: Record<string, { total: number; percentage: number }> = {};
     if (incomeCategoryStats && incomeCategoryStats.length > 0) {
       incomeCategoryStats.forEach(stat => {
-        incomeByCategory[stat.category] = stat.total;
+        incomeByCategory[stat.category] = {
+          total: stat.total,
+          percentage: stat.percentage,
+        };
       });
     }
 
@@ -132,8 +143,11 @@ export default async function handler(
 
 Here is the transaction data:
 
-Transactions (JSON) - includes both expenses (negative amounts) and income (positive amounts):
-${JSON.stringify(transactions, null, 2)}
+Spending Transactions (JSON) - all amounts are negative:
+${JSON.stringify(spendingTransactions, null, 2)}
+
+Earnings Transactions (JSON) - all amounts are positive:
+${JSON.stringify(earningsTransactions, null, 2)}
 
 Aggregates:
 ${JSON.stringify(aggregates, null, 2)}
@@ -141,12 +155,13 @@ ${JSON.stringify(aggregates, null, 2)}
 Additional metrics:
 - Savings rate: ${savingsRate !== undefined ? `${savingsRate.toFixed(1)}%` : 'N/A (no income data)'}
 - Average spent per day: ${avgSpentPerDay.toFixed(2)} ${userCurrency}
-- Total transactions: ${transactions.length}
+- Total spending transactions: ${spendingTransactions.length}
+- Total earnings transactions: ${earningsTransactions.length}
 
 Context:
 ${JSON.stringify(context, null, 2)}
 
-Now generate the analysis message following all the rules above. Use the aggregates provided to show category splits. Include insights about both expenses and income when income data is available. When net difference and income-to-expenses ratio are provided, include analysis of savings/deficit and financial health based on the ratio.`;
+Now generate the analysis message following all the rules above. Use the aggregates provided to show category splits with percentages. Review spending and earnings transactions separately to provide comprehensive insights. Include insights about both expenses and income when income data is available. When net difference and income-to-expenses ratio are provided, include analysis of savings/deficit and financial health based on the ratio.`;
 
     // Call OpenAI
     const openaiApiKey = process.env.OPENAI_API_KEY;
