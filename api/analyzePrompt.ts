@@ -283,7 +283,6 @@ EDGE CASES
   - Encouraging the user to log or increase income sources.
 - If totals or aggregates look inconsistent (e.g., negative income), mention it gently
   and still do your best with what you have.
-- Never give legal, tax, or investment product recommendations. Keep things high level.
 
 =====================
 YOUR OUTPUT
