@@ -181,7 +181,7 @@ Now generate the analysis message following all the rules above. Use the aggrega
       body: JSON.stringify({
         model: 'gpt-5.1',
         messages: [{ role: 'user', content: prompt }],
-        max_completion_tokens: 4000,
+        max_completion_tokens: 8000,
         reasoning_effort: 'medium',
       }),
     });
@@ -206,11 +206,20 @@ Now generate the analysis message following all the rules above. Use the aggrega
     }
 
     const openaiData = await openaiResponse.json();
-    const analysis = openaiData.choices?.[0]?.message?.content?.trim();
+    
+    // Log the full message structure for debugging
+    const message = openaiData.choices?.[0]?.message;
+    console.log('OpenAI response message structure:', JSON.stringify(message, null, 2));
+    
+    const analysis = message?.content?.trim();
 
     if (!analysis) {
-      console.error('No content from OpenAI response:', openaiData);
-      return res.status(502).json({ error: 'AI did not return a valid analysis' });
+      console.error('No content from OpenAI response. Full response:', JSON.stringify(openaiData, null, 2));
+      return res.status(502).json({ 
+        error: 'AI did not return a valid analysis',
+        finish_reason: openaiData.choices?.[0]?.finish_reason,
+        usage: openaiData.usage,
+      });
     }
 
     console.log('✅ OpenAI analysis generated');
