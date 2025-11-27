@@ -181,7 +181,7 @@ Now generate the analysis message following all the rules above. Use the aggrega
       body: JSON.stringify({
         model: 'gpt-5.1',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
         reasoning_effort: 'medium',
       }),
     });
