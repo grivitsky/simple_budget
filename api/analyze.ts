@@ -179,10 +179,10 @@ Now generate the analysis message following all the rules above. Use the aggrega
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-5.1',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 4000,
-        temperature: 0.7,
+        reasoning_effort: 'medium',
       }),
     });
 
